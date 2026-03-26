@@ -52,7 +52,7 @@ if st.session_state['user'] is None:
             email = st.text_input("Email address", placeholder="hr@example.com", key="login_email_final")
             password = st.text_input("Password", type="password", key="login_pass_final")
             
-            if st.button("Continue to Dashboard", use_container_width=True):
+            if st.button("Login", use_container_width=True):
                 try:
                     resp = requests.post(f"{API_URL}/users/login", json={
                         "name": "", "email": email, "password": password, "role": ""
