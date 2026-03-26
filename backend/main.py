@@ -12,10 +12,27 @@ from . import models
 from . import schemas
 from .database import engine, get_db
 from .services.ai_screening import calculate_fit_score
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import HTMLResponse, RedirectResponse
 
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Nukhba Elite API | Talent Intelligence")
+
+# Serve the HTML/CSS/JS frontend
+import pathlib
+web_dir = pathlib.Path(__file__).parent.parent / "frontend" / "web"
+if web_dir.exists():
+    app.mount("/web",    StaticFiles(directory=str(web_dir)),                        name="web")
+    app.mount("/pages",  StaticFiles(directory=str(web_dir / "pages")),              name="pages")
+    app.mount("/nukhba_bg.png", StaticFiles(directory=str(pathlib.Path(__file__).parent.parent / "frontend")), name="bg_img")
+
+@app.get("/", response_class=HTMLResponse, include_in_schema=False)
+def serve_index():
+    idx = web_dir / "index.html"
+    if idx.exists():
+        return HTMLResponse(idx.read_text(encoding="utf-8"))
+    return RedirectResponse("/docs")
 
 # Auto-seed on startup for Render ephemeral storage
 @app.on_event("startup")

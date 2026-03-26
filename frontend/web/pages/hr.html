@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nukhba Elite — HR Command Center</title>
+  <link rel="stylesheet" href="/web/css/style.css" />
+  <style>
+    body { display: flex; flex-direction: column; min-height: 100vh; }
+    .main { display: flex; flex: 1; }
+    .sidebar {
+      width: 240px;
+      background: #0a0a0a;
+      border-right: 1px solid var(--border);
+      padding: 28px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      position: sticky; top: 64px;
+      height: calc(100vh - 64px);
+    }
+    .sidebar-label { font-size: 0.68rem; letter-spacing: 2px; color: var(--text-dim); text-transform: uppercase; margin: 16px 0 6px; }
+    .sidebar-btn {
+      display: flex; align-items: center; gap: 10px;
+      padding: 11px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text);
+      transition: all 0.2s;
+      background: transparent;
+      border: none;
+      width: 100%;
+      text-align: left;
+    }
+    .sidebar-btn:hover, .sidebar-btn.active { background: var(--gold-glow); color: var(--gold); }
+    .content { flex: 1; padding: 36px; overflow-y: auto; }
+
+    /* ── TABS ── */
+    .content-tabs { display: flex; gap: 4px; margin-bottom: 28px; }
+    .ctab {
+      padding: 10px 22px; border-radius: 10px;
+      cursor: pointer; font-weight: 600; font-size: 0.88rem;
+      color: var(--text-dim); background: #161616;
+      border: 1px solid transparent; transition: all 0.2s;
+    }
+    .ctab.active { background: var(--gold-glow); border-color: var(--border); color: var(--gold); }
+
+    /* ── JOB FORM ── */
+    .section { display: none; }
+    .section.active { display: block; }
+
+    /* ── APPLICANT CARD ── */
+    .applicant-row {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      margin-bottom: 14px;
+      transition: border-color 0.3s;
+    }
+    .applicant-row:hover { border-color: var(--gold); }
+    .score-bar-wrap { background: #222; border-radius: 10px; height: 8px; margin: 10px 0; overflow: hidden; }
+    .score-bar { height: 100%; border-radius: 10px; transition: width 0.6s ease; }
+    .score-bar.high   { background: linear-gradient(to right, #38a169, #68d391); }
+    .score-bar.medium { background: linear-gradient(to right, #B8860B, #D4A017); }
+    .score-bar.low    { background: linear-gradient(to right, #e53e3e, #fc8181); }
+    details summary { cursor: pointer; font-size: 0.88rem; color: var(--gold); margin-top: 10px; }
+    details .resume-text {
+      background: #0e0e0e;
+      border: 1px solid #222;
+      border-radius: 8px;
+      padding: 14px;
+      font-size: 0.82rem;
+      color: #aaa;
+      white-space: pre-wrap;
+      margin-top: 10px;
+      max-height: 180px;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<nav class="topbar">
+  <div>
+    <div class="topbar-logo">نخبة</div>
+    <div class="topbar-sub">HR COMMAND CENTER</div>
+  </div>
+  <div class="topbar-right" id="topbar-user"></div>
+</nav>
+
+<div class="main">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-label">Navigation</div>
+    <button class="sidebar-btn active" onclick="showSection('jobs')">📋 &nbsp;Post Jobs</button>
+    <button class="sidebar-btn" onclick="showSection('review')">🔍 &nbsp;AI Review</button>
+
+    <div class="sidebar-label">System</div>
+    <button class="sidebar-btn" onclick="downloadBackup()">📦 &nbsp;Download Backup</button>
+    <button class="sidebar-btn" style="color:#fc8181" onclick="logout()">⏻ &nbsp;Logout</button>
+  </aside>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- ── METRICS ── -->
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <div class="metric-value" id="metric-jobs">—</div>
+        <div class="metric-label">Active Listings</div>
+        <div class="metric-change">↑ Elite Roles</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value" id="metric-apps">—</div>
+        <div class="metric-label">Applications</div>
+        <div class="metric-change">AI Screened</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value">98.4%</div>
+        <div class="metric-label">AI Accuracy</div>
+        <div class="metric-change">↑ 1.2%</div>
+      </div>
+    </div>
+
+    <!-- ── POST JOB ── -->
+    <div class="section active" id="section-jobs">
+      <h2 style="margin-bottom:24px">📋 &nbsp;Post a New Role</h2>
+      <div class="card" style="max-width:680px">
+        <div class="form-group">
+          <label>Job Title</label>
+          <input type="text" id="job-title" placeholder="e.g. Senior Fullstack Engineer" />
+        </div>
+        <div class="form-group">
+          <label>Job Description</label>
+          <textarea id="job-desc" rows="5" placeholder="Describe the role and responsibilities..."></textarea>
+        </div>
+        <div class="form-group">
+          <label>AI Keyword Requirements (comma-separated)</label>
+          <textarea id="job-req" rows="3" placeholder="Python, AWS, React, Machine Learning"></textarea>
+        </div>
+        <button class="btn btn-primary" onclick="postJob()">🚀 &nbsp;Deploy Listing</button>
+      </div>
+    </div>
+
+    <!-- ── AI REVIEW ── -->
+    <div class="section" id="section-review">
+      <h2 style="margin-bottom:24px">🔍 &nbsp;AI Application Review</h2>
+      <div class="form-group" style="max-width:340px">
+        <label>Select Active Role</label>
+        <select id="job-select" onchange="loadApplications()">
+          <option value="">— Choose a role —</option>
+        </select>
+      </div>
+      <div id="applications-list">
+        <p class="text-dim">Select a role above to view candidates.</p>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<div id="toast-container"></div>
+<script src="/web/js/app.js"></script>
+<script>
+  const user = requireAuth();
+  if (user) renderTopbar();
+
+  function showSection(name) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.sidebar-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(`section-${name}`).classList.add('active');
+    event.target.classList.add('active');
+    if (name === 'review') populateJobSelect();
+  }
+
+  // ── Load Metrics ──
+  async function loadMetrics() {
+    try {
+      const jobs = await api('GET', '/jobs');
+      document.getElementById('metric-jobs').textContent = jobs.filter(j => j.status === 'Open').length;
+      let total = 0;
+      for (const j of jobs.filter(j => j.hr_id === user.id)) {
+        try {
+          const apps = await api('GET', `/applications/${j.id}`);
+          total += apps.length;
+        } catch {}
+      }
+      document.getElementById('metric-apps').textContent = total;
+    } catch {}
+  }
+  loadMetrics();
+
+  // ── Post Job ──
+  async function postJob() {
+    const btn = event.target;
+    const title = document.getElementById('job-title').value.trim();
+    const desc  = document.getElementById('job-desc').value.trim();
+    const req   = document.getElementById('job-req').value.trim();
+    if (!title || !desc || !req) return showToast('Please fill all fields', 'error');
+    setLoading(btn, true);
+    try {
+      await api('POST', `/jobs?hr_id=${user.id}`, { title, description: desc, requirements: req });
+      showToast('Listing deployed! 🚀', 'success');
+      document.getElementById('job-title').value = '';
+      document.getElementById('job-desc').value = '';
+      document.getElementById('job-req').value = '';
+      loadMetrics();
+    } catch(e) { showToast(e.message, 'error'); }
+    finally { setLoading(btn, false); }
+  }
+
+  // ── Populate Job Select ──
+  async function populateJobSelect() {
+    try {
+      const jobs = await api('GET', '/jobs');
+      const mine = jobs.filter(j => j.hr_id === user.id);
+      const sel = document.getElementById('job-select');
+      sel.innerHTML = '<option value="">— Choose a role —</option>';
+      mine.forEach(j => {
+        const o = document.createElement('option');
+        o.value = j.id; o.textContent = j.title;
+        sel.appendChild(o);
+      });
+    } catch {}
+  }
+
+  // ── Load Applications ──
+  async function loadApplications() {
+    const jobId = document.getElementById('job-select').value;
+    const list  = document.getElementById('applications-list');
+    if (!jobId) { list.innerHTML = '<p class="text-dim">Select a role above.</p>'; return; }
+    list.innerHTML = '<p class="text-dim">Loading...</p>';
+    try {
+      const apps = await api('GET', `/applications/${jobId}`);
+      if (!apps.length) { list.innerHTML = '<p class="text-dim">No applications yet for this role.</p>'; return; }
+      list.innerHTML = apps.map(a => {
+        const sc = a.ai_score;
+        const cls = sc >= 75 ? 'high' : sc >= 40 ? 'medium' : 'low';
+        const badge = sc >= 75 ? 'badge-green' : sc >= 40 ? 'badge-gold' : 'badge-red';
+        return `
+          <div class="applicant-row">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <strong>Applicant #${a.id}</strong>
+              <span class="badge ${badge}">${sc}% Match</span>
+            </div>
+            <div class="score-bar-wrap"><div class="score-bar ${cls}" style="width:${sc}%"></div></div>
+            <p style="font-size:.85rem;color:var(--text-dim);margin-bottom:10px">💡 ${a.ai_feedback}</p>
+            <div style="display:flex;gap:10px;align-items:center">
+              <select id="status-${a.id}" style="flex:1;padding:8px 12px;background:#1a1a1a;border:1px solid #333;border-radius:8px;color:var(--text)">
+                ${['Screened','Interviewing','Hired','Rejected'].map(s =>
+                  `<option ${a.status===s?'selected':''}>${s}</option>`).join('')}
+              </select>
+              <button class="btn btn-ghost" style="width:auto;padding:8px 16px"
+                onclick="updateStatus(${a.id})">Update</button>
+            </div>
+            <details>
+              <summary>View Resume</summary>
+              <div class="resume-text">${a.resume_text}</div>
+            </details>
+          </div>`;
+      }).join('');
+    } catch(e) { list.innerHTML = `<p style="color:var(--danger)">Error: ${e.message}</p>`; }
+  }
+
+  async function updateStatus(appId) {
+    const s = document.getElementById(`status-${appId}`).value;
+    try {
+      await api('PUT', `/applications/${appId}/status?status=${encodeURIComponent(s)}`);
+      showToast('Status updated ✅', 'success');
+    } catch(e) { showToast(e.message, 'error'); }
+  }
+
+  function downloadBackup() {
+    window.open(`${API_URL}/system/download-data`, '_blank');
+    showToast('Preparing backup download... 📦', 'info');
+  }
+</script>
+</body>
+</html>

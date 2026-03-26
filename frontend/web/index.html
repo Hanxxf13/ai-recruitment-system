@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nukhba Elite — Sign In</title>
+  <meta name="description" content="Nukhba Elite Recruitment — the world's most sophisticated talent intelligence platform." />
+  <link rel="stylesheet" href="/web/css/style.css" />
+  <style>
+    body { display: flex; height: 100vh; overflow: hidden; }
+
+    /* ─── LEFT PANE ─── */
+    .split-left {
+      flex: 1.4;
+      background: url('/nukhba_bg.png') center/cover no-repeat;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 48px;
+    }
+    .split-left::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.85) 100%);
+    }
+    .left-content { position: relative; z-index: 1; }
+    .left-logo { font-family: 'Amiri', serif; font-size: 4rem; color: var(--gold); line-height: 1; }
+    .left-sub   { letter-spacing: 4px; font-size: 0.75rem; color: var(--text-dim); margin-bottom: 40px; }
+    .testimonial {
+      background: rgba(255,255,255,0.05);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: var(--radius);
+      padding: 28px;
+    }
+    .testimonial p { font-size: 1rem; line-height: 1.7; color: var(--text); font-style: italic; }
+    .testimonial-author { margin-top: 16px; color: var(--gold); font-weight: 700; font-size: 0.9rem; }
+
+    /* ─── RIGHT PANE ─── */
+    .split-right {
+      width: 480px;
+      min-width: 420px;
+      background: #0a0a0a;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 48px 44px;
+      overflow-y: auto;
+      border-left: 1px solid var(--border);
+    }
+    .right-logo { font-family: 'Amiri', serif; font-size: 2.8rem; color: var(--gold); margin-bottom: 4px; }
+    .right-sub  { font-size: 0.72rem; letter-spacing: 3px; color: var(--text-dim); margin-bottom: 36px; }
+
+    /* ─── TABS ─── */
+    .tab-bar {
+      display: flex;
+      background: #161616;
+      border-radius: 12px;
+      padding: 4px;
+      margin-bottom: 32px;
+      border: 1px solid var(--border);
+    }
+    .tab {
+      flex: 1;
+      padding: 10px;
+      text-align: center;
+      border-radius: 9px;
+      cursor: pointer;
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--text-dim);
+      transition: all 0.25s;
+    }
+    .tab.active {
+      background: linear-gradient(135deg, var(--gold), var(--gold-light));
+      color: #000;
+    }
+
+    /* ─── OTP BANNER ─── */
+    .otp-banner {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      background: #111;
+      border: 1px solid var(--gold);
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-bottom: 20px;
+    }
+    .otp-banner .otp-icon { font-size: 2rem; }
+    .otp-banner .otp-info { flex: 1; }
+    .otp-banner .otp-info small { color: var(--text-dim); font-size: 0.8rem; }
+    .otp-banner .otp-info strong { color: var(--gold); font-size: 0.95rem; }
+    #otp-timer {
+      font-size: 1.6rem;
+      font-weight: 900;
+      color: var(--gold);
+      font-variant-numeric: tabular-nums;
+      min-width: 52px;
+      text-align: right;
+    }
+    .otp-expired-banner {
+      background: rgba(229,62,62,0.08);
+      border: 1px solid var(--danger);
+      border-radius: 12px;
+      padding: 14px 20px;
+      color: #fc8181;
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 20px;
+    }
+
+    /* ─── 2-COL GRID ─── */
+    .form-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+    /* ─── PHONE ROW ─── */
+    .phone-row { display: flex; gap: 10px; }
+    .phone-row select { flex: 0 0 160px; }
+    .phone-row input  { flex: 1; }
+
+    /* ─── STEP DOTS ─── */
+    .steps {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 28px;
+    }
+    .step-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: #333;
+      transition: all 0.3s;
+    }
+    .step-dot.active { background: var(--gold); width: 24px; border-radius: 4px; }
+    .step-dot.done   { background: var(--success); }
+
+    /* ─── DEMO HINT ─── */
+    .demo-hint {
+      text-align: center;
+      margin-top: 24px;
+      padding: 12px;
+      background: rgba(184,134,11,0.05);
+      border: 1px dashed rgba(184,134,11,0.3);
+      border-radius: 10px;
+      font-size: 0.8rem;
+      color: var(--text-dim);
+    }
+    .demo-hint code { color: var(--gold); background: transparent; }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════ LEFT PANE ══════════════════════════════ -->
+<div class="split-left">
+  <div class="left-content">
+    <div class="left-logo">نخبة</div>
+    <div class="left-sub">ELITE • SELECTION</div>
+    <div class="testimonial">
+      <p>"Nukhba is where precision meets talent. We found our entire elite engineering team in a matter of days — not months."</p>
+      <div class="testimonial-author">Sarah Al-Mulla &nbsp;·&nbsp; VP of Engineering</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ RIGHT PANE ══════════════════════════════ -->
+<div class="split-right">
+  <div class="right-logo">نخبة</div>
+  <div class="right-sub">ELITE • SELECTION</div>
+
+  <!-- Tab Bar -->
+  <div class="tab-bar">
+    <div class="tab active" id="tab-signin" onclick="switchTab('signin')">Sign In</div>
+    <div class="tab"        id="tab-register" onclick="switchTab('register')">Create Account</div>
+  </div>
+
+  <!-- ── SIGN IN FORM ── -->
+  <div id="panel-signin">
+    <h2 style="font-size:1.9rem;font-weight:900;margin-bottom:6px">Welcome Back</h2>
+    <p class="text-dim" style="margin-bottom:28px;font-size:.9rem">Enter your elite login details.</p>
+
+    <div class="form-group">
+      <label>Email Address</label>
+      <input type="email" id="login-email" placeholder="hr@example.com" />
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="login-password" placeholder="••••••••" />
+    </div>
+
+    <button class="btn btn-primary" id="btn-login" onclick="doLogin()">Login</button>
+
+    <div class="demo-hint">
+      Demo: <code>hr@example.com</code> / <code>password123</code>
+    </div>
+  </div>
+
+  <!-- ── REGISTER — STEP 1 ── -->
+  <div id="panel-register" class="hidden">
+    <h2 style="font-size:1.9rem;font-weight:900;margin-bottom:6px">Let's join with us</h2>
+    <p class="text-dim" style="margin-bottom:20px;font-size:.9rem">Start your elite recruitment journey.</p>
+
+    <!-- Step indicator -->
+    <div class="steps">
+      <div class="step-dot active" id="dot-1"></div>
+      <div class="step-dot"        id="dot-2"></div>
+    </div>
+
+    <!-- STEP 1 — Profile -->
+    <div id="reg-step-1">
+      <div class="form-cols">
+        <div class="form-group">
+          <label>Full Name</label>
+          <input type="text" id="reg-name" placeholder="Jane Doe" />
+        </div>
+        <div class="form-group">
+          <label>Role</label>
+          <select id="reg-role">
+            <option>Candidate</option>
+            <option>HR</option>
+            <option>Admin</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Email Address</label>
+        <input type="email" id="reg-email" placeholder="jane@example.com" />
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="reg-password" placeholder="Create a strong password" />
+      </div>
+
+      <div class="form-cols">
+        <div class="form-group">
+          <label>Country</label>
+          <select id="reg-country">
+            <option value="United Arab Emirates|+971|🇦🇪">🇦🇪 UAE (+971)</option>
+            <option value="Saudi Arabia|+966|🇸🇦">🇸🇦 Saudi Arabia (+966)</option>
+            <option value="Qatar|+974|🇶🇦">🇶🇦 Qatar (+974)</option>
+            <option value="Oman|+968|🇴🇲">🇴🇲 Oman (+968)</option>
+            <option value="Kuwait|+965|🇰🇼">🇰🇼 Kuwait (+965)</option>
+            <option value="Bahrain|+973|🇧🇭">🇧🇭 Bahrain (+973)</option>
+            <option value="United States|+1|🇺🇸">🇺🇸 USA (+1)</option>
+            <option value="United Kingdom|+44|🇬🇧">🇬🇧 UK (+44)</option>
+            <option value="India|+91|🇮🇳">🇮🇳 India (+91)</option>
+            <option value="Pakistan|+92|🇵🇰">🇵🇰 Pakistan (+92)</option>
+            <option value="Jordan|+962|🇯🇴">🇯🇴 Jordan (+962)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Phone Number</label>
+          <input type="tel" id="reg-phone" placeholder="50 123 4567" />
+        </div>
+      </div>
+
+      <button class="btn btn-primary" id="btn-request-otp" onclick="requestOtp()">
+        📲 Request OTP
+      </button>
+    </div>
+
+    <!-- STEP 2 — OTP Verification -->
+    <div id="reg-step-2" class="hidden">
+
+      <!-- Active countdown -->
+      <div class="otp-banner" id="otp-active">
+        <div class="otp-icon">📲</div>
+        <div class="otp-info">
+          <strong id="otp-phone-display">your number</strong><br>
+          <small>OTP expires in</small>
+        </div>
+        <div id="otp-timer">60s</div>
+      </div>
+
+      <!-- Expired -->
+      <div class="otp-expired-banner hidden" id="otp-expired">
+        ⏰ <strong>OTP Expired!</strong> Request a new one below.
+      </div>
+
+      <div class="form-group">
+        <label>Enter 4-Digit OTP</label>
+        <input type="text" id="otp-input" placeholder="0 0 0 0" maxlength="4"
+               style="font-size:1.6rem;letter-spacing:8px;text-align:center;font-weight:900" />
+      </div>
+
+      <button class="btn btn-primary"  id="btn-verify"  onclick="verifyOtp()">✅ Verify &amp; Create Account</button>
+      <div style="height:10px"></div>
+      <div style="display:flex;gap:10px;margin-top:4px">
+        <button class="btn btn-ghost" id="btn-resend" onclick="requestOtp(true)" disabled>🔄 Resend OTP</button>
+        <button class="btn btn-ghost" onclick="goToStep1()">← Go Back</button>
+      </div>
+    </div>
+  </div>
+  <!-- end register -->
+</div>
+
+<div id="toast-container"></div>
+<script src="/web/js/app.js"></script>
+<script>
+  // ── Redirect if already logged in ──
+  const me = session.get();
+  if (me) redirectByRole(me);
+
+  function redirectByRole(u) {
+    if (u.role === 'HR' || u.role === 'Admin') window.location.href = '/pages/hr.html';
+    else window.location.href = '/pages/candidate.html';
+  }
+
+  // ── Tab switch ──
+  function switchTab(tab) {
+    document.getElementById('panel-signin').classList.toggle('hidden', tab !== 'signin');
+    document.getElementById('panel-register').classList.toggle('hidden', tab !== 'register');
+    document.getElementById('tab-signin').classList.toggle('active', tab === 'signin');
+    document.getElementById('tab-register').classList.toggle('active', tab === 'register');
+  }
+
+  // ── Login ──
+  async function doLogin() {
+    const btn = document.getElementById('btn-login');
+    const email = document.getElementById('login-email').value.trim();
+    const pwd   = document.getElementById('login-password').value;
+    if (!email || !pwd) return showToast('Please fill in all fields', 'error');
+    setLoading(btn, true);
+    try {
+      const user = await api('POST', '/users/login', { name:'', email, password:pwd, role:'' });
+      session.set(user);
+      showToast(`Welcome back, ${user.name}! 💎`, 'success');
+      setTimeout(() => redirectByRole(user), 800);
+    } catch(e) {
+      showToast(e.message || 'Invalid credentials', 'error');
+    } finally { setLoading(btn, false); }
+  }
+
+  // ── Request OTP ──
+  let regData = {};
+  async function requestOtp(isResend = false) {
+    const btn = document.getElementById(isResend ? 'btn-resend' : 'btn-request-otp');
+    if (!isResend) {
+      const name     = document.getElementById('reg-name').value.trim();
+      const role     = document.getElementById('reg-role').value;
+      const email    = document.getElementById('reg-email').value.trim();
+      const password = document.getElementById('reg-password').value;
+      const country  = document.getElementById('reg-country').value;
+      const phone    = document.getElementById('reg-phone').value.trim();
+      const [cName, cCode] = country.split('|');
+      if (!name||!email||!password||!phone) return showToast('Please fill all fields', 'error');
+      regData = { name, email, password, role, country: `${cName} ${cCode}`, phone: `${cCode}${phone}` };
+    }
+
+    setLoading(btn, true);
+    try {
+      const res = await api('POST', '/users/request-otp', null, { email: regData.email, phone: regData.phone });
+      regData._otp = res.otp;
+      document.getElementById('otp-phone-display').textContent = regData.phone;
+
+      // Show step 2
+      document.getElementById('reg-step-1').classList.add('hidden');
+      document.getElementById('reg-step-2').classList.remove('hidden');
+      document.getElementById('otp-active').classList.remove('hidden');
+      document.getElementById('otp-expired').classList.add('hidden');
+      document.getElementById('btn-verify').disabled = false;
+      document.getElementById('btn-resend').disabled = true;
+      document.getElementById('otp-input').value = '';
+      document.getElementById('otp-timer').style.color = 'var(--gold)';
+
+      // Update step dots
+      document.getElementById('dot-1').classList.remove('active');
+      document.getElementById('dot-1').classList.add('done');
+      document.getElementById('dot-2').classList.add('active');
+
+      startOtpCountdown(60, () => {});
+      showToast('OTP sent to ' + regData.phone + ' 📲', 'success');
+    } catch(e) {
+      showToast('Failed to send OTP: ' + e.message, 'error');
+    } finally { setLoading(btn, false); }
+  }
+
+  // ── Verify OTP ──
+  async function verifyOtp() {
+    const btn = document.getElementById('btn-verify');
+    const entered = document.getElementById('otp-input').value.trim();
+    if (entered.length !== 4) return showToast('Enter the full 4-digit OTP', 'error');
+    if (entered !== String(regData._otp)) return showToast('❌ Wrong OTP. Try again or resend.', 'error');
+
+    setLoading(btn, true);
+    try {
+      const user = await api('POST', '/users/register', regData);
+      showToast('🎉 Elite account created! Signing you in...', 'success');
+      session.set(user);
+      setTimeout(() => redirectByRole(user), 1200);
+    } catch(e) {
+      showToast(e.message || 'Registration failed', 'error');
+    } finally { setLoading(btn, false); }
+  }
+
+  function goToStep1() {
+    document.getElementById('reg-step-2').classList.add('hidden');
+    document.getElementById('reg-step-1').classList.remove('hidden');
+    document.getElementById('dot-1').classList.remove('done');
+    document.getElementById('dot-1').classList.add('active');
+    document.getElementById('dot-2').classList.remove('active');
+  }
+
+  // Enter key shortcuts
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      if (!document.getElementById('panel-signin').classList.contains('hidden')) doLogin();
+    }
+  });
+</script>
+</body>
+</html>

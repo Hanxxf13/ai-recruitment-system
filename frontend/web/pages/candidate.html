@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nukhba Elite — Career Portal</title>
+  <link rel="stylesheet" href="/web/css/style.css" />
+  <style>
+    body { display: flex; flex-direction: column; min-height: 100vh; }
+    .main { display: flex; flex: 1; }
+    .sidebar {
+      width: 230px;
+      background: #0a0a0a;
+      border-right: 1px solid var(--border);
+      padding: 28px 20px;
+      display: flex; flex-direction: column; gap: 8px;
+      position: sticky; top: 64px;
+      height: calc(100vh - 64px);
+    }
+    .sidebar-label { font-size: .68rem; letter-spacing: 2px; color: var(--text-dim); text-transform: uppercase; margin: 16px 0 6px; }
+    .sidebar-btn {
+      display: flex; align-items: center; gap: 10px;
+      padding: 11px 14px; border-radius: 10px;
+      cursor: pointer; font-size: .9rem; font-weight: 600; color: var(--text);
+      background: transparent; border: none; width: 100%; text-align: left; transition: all .2s;
+    }
+    .sidebar-btn:hover, .sidebar-btn.active { background: var(--gold-glow); color: var(--gold); }
+    .content { flex: 1; padding: 36px; overflow-y: auto; }
+    .section { display: none; }
+    .section.active { display: block; }
+
+    /* ── JOB CARD ── */
+    .job-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px 28px;
+      margin-bottom: 16px;
+      transition: border-color .3s, transform .2s;
+    }
+    .job-card:hover { border-color: var(--gold); transform: translateY(-2px); }
+    .job-card h3 { font-size: 1.1rem; font-weight: 800; margin-bottom: 4px; }
+    .job-card .elite-tag { color: var(--gold); font-size: .75rem; font-weight: 700; letter-spacing: 1px; margin-bottom: 10px; }
+    .job-card p { color: var(--text-dim); font-size: .9rem; line-height: 1.5; }
+
+    details summary { cursor: pointer; color: var(--gold); font-size: .88rem; font-weight: 600; margin-top: 14px; }
+    details .apply-box { margin-top: 16px; }
+    textarea.resume-input {
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 10px;
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: .88rem;
+      padding: 12px;
+      width: 100%;
+      resize: vertical;
+    }
+
+    /* ── APP STATUS ── */
+    .app-card {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 16px 20px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 12px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<nav class="topbar">
+  <div>
+    <div class="topbar-logo">نخبة</div>
+    <div class="topbar-sub">ELITE CAREER PORTAL</div>
+  </div>
+  <div class="topbar-right" id="topbar-user"></div>
+</nav>
+
+<div class="main">
+  <aside class="sidebar">
+    <div class="sidebar-label">Navigation</div>
+    <button class="sidebar-btn active" onclick="showSection('explore', event)">🚀 &nbsp;Explore Roles</button>
+    <button class="sidebar-btn" onclick="showSection('tracker', event)">📋 &nbsp;My Applications</button>
+    <div class="sidebar-label">Account</div>
+    <button class="sidebar-btn" style="color:#fc8181" onclick="logout()">⏻ &nbsp;Logout</button>
+  </aside>
+
+  <div class="content">
+
+    <!-- ── METRICS ── -->
+    <div class="metrics-grid" style="grid-template-columns:repeat(3,1fr)">
+      <div class="metric-card">
+        <div class="metric-value" id="m-jobs">—</div>
+        <div class="metric-label">Open Positions</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value" id="m-apps">—</div>
+        <div class="metric-label">My Applications</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value">AI</div>
+        <div class="metric-label">Screened Instantly</div>
+        <div class="metric-change">By Nukhba Engine</div>
+      </div>
+    </div>
+
+    <!-- ── EXPLORE ROLES ── -->
+    <div class="section active" id="section-explore">
+      <h2 style="margin-bottom:24px">🚀 &nbsp;Open Elite Positions</h2>
+      <div id="jobs-list"><p class="text-dim">Loading positions...</p></div>
+    </div>
+
+    <!-- ── MY APPLICATIONS ── -->
+    <div class="section" id="section-tracker">
+      <h2 style="margin-bottom:24px">📋 &nbsp;My Application Tracker</h2>
+      <div id="apps-list"><p class="text-dim">Loading your applications...</p></div>
+    </div>
+
+  </div>
+</div>
+
+<div id="toast-container"></div>
+<script src="/web/js/app.js"></script>
+<script>
+  const user = requireAuth('Candidate');
+  if (user) renderTopbar();
+
+  function showSection(name, e) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.sidebar-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(`section-${name}`).classList.add('active');
+    if (e) e.target.classList.add('active');
+    if (name === 'tracker') loadMyApps();
+  }
+
+  // ── Load Open Jobs ──
+  async function loadJobs() {
+    const list = document.getElementById('jobs-list');
+    try {
+      const jobs = await api('GET', '/jobs');
+      const open = jobs.filter(j => j.status === 'Open');
+      document.getElementById('m-jobs').textContent = open.length;
+      if (!open.length) { list.innerHTML = '<p class="text-dim">No open positions right now. Check back soon!</p>'; return; }
+      list.innerHTML = open.map(j => `
+        <div class="job-card">
+          <h3>${j.title}</h3>
+          <div class="elite-tag">ELITE MATCH ✦</div>
+          <p>${j.description.substring(0, 180)}...</p>
+          <details>
+            <summary>Requirements &amp; Apply</summary>
+            <div class="apply-box">
+              <p style="color:var(--text);margin-bottom:12px"><strong>Requirements:</strong> ${j.requirements}</p>
+              <label style="font-size:.8rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px">Your Resume / Professional Summary</label>
+              <textarea class="resume-input" id="res-${j.id}" rows="5" placeholder="Paste your professional summary here for AI screening..."></textarea>
+              <div style="height:10px"></div>
+              <button class="btn btn-primary" onclick="applyJob(${j.id}, this)">Submit Application 🚀</button>
+            </div>
+          </details>
+        </div>`).join('');
+    } catch(e) { list.innerHTML = `<p style="color:var(--danger)">Error: ${e.message}</p>`; }
+  }
+  loadJobs();
+
+  async function applyJob(jobId, btn) {
+    const resume = document.getElementById(`res-${jobId}`).value.trim();
+    if (resume.length < 50) return showToast('Please provide a more detailed professional summary (min 50 chars)', 'error');
+    setLoading(btn, true);
+    try {
+      await api('POST', `/applications?candidate_id=${user.id}`, { job_id: jobId, resume_text: resume });
+      showToast('Application submitted & AI-screened! 🎉', 'success');
+      loadMyApps();
+    } catch(e) { showToast(e.message, 'error'); }
+    finally { setLoading(btn, false); }
+  }
+
+  async function loadMyApps() {
+    const list = document.getElementById('apps-list');
+    list.innerHTML = '<p class="text-dim">Loading...</p>';
+    try {
+      const apps = await api('GET', `/applications/candidate/${user.id}`);
+      document.getElementById('m-apps').textContent = apps.length;
+      if (!apps.length) { list.innerHTML = '<p class="text-dim">You haven\'t applied to any roles yet. Explore positions to get started!</p>'; return; }
+      const badge = s => ({ Screened:'badge-blue', Interviewing:'badge-gold', Hired:'badge-green', Rejected:'badge-red' }[s] || 'badge-blue');
+      list.innerHTML = apps.map(a => `
+        <div class="app-card">
+          <div>
+            <strong>Job #${a.job_id}</strong>
+            <div style="font-size:.8rem;color:var(--text-dim);margin-top:4px">Applied ${new Date(a.created_at).toLocaleDateString()}</div>
+          </div>
+          <div style="text-align:right">
+            <span class="badge ${badge(a.status)}">${a.status}</span>
+            <div style="font-size:.8rem;color:var(--gold);margin-top:6px">AI Score: ${a.ai_score}%</div>
+          </div>
+        </div>`).join('');
+    } catch(e) { list.innerHTML = `<p style="color:var(--danger)">Error: ${e.message}</p>`; }
+  }
+</script>
+</body>
+</html>
