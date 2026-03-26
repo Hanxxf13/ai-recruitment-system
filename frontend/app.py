@@ -25,49 +25,48 @@ if 'user' not in st.session_state:
 if st.session_state['user'] is None:
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        # Unified Login Card
-        st.markdown("<div style='background: rgba(255, 255, 255, 0.05); border-radius: 15px; padding: 25px; backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);'>", unsafe_allow_html=True)
-        tab1, tab2 = st.tabs(["🔐 Sign In", "📝 Create Account"])
-        
-        with tab1:
-            st.markdown("#### Welcome Back")
-            email = st.text_input("Email", placeholder="hr@example.com", key="login_email")
-            password = st.text_input("Password", type="password", key="login_pass")
-            if st.button("Access Dashboard", use_container_width=True):
-                try:
-                    resp = requests.post(f"{API_URL}/users/login", json={
-                        "name": "", "email": email, "password": password, "role": ""
-                    }, timeout=5)
-                    if resp.status_code == 200:
-                        st.session_state['user'] = resp.json()
-                        st.success(f"Log-in successful! Redirecting...")
-                        st.rerun()
-                    else:
-                        st.error("Invalid credentials. Try: hr@example.com / password123")
-                except requests.exceptions.ConnectionError:
-                    st.error("⚠️ Backend is offline. Please start your FastAPI server.")
-                except Exception as e:
-                    st.error(f"Error: {str(e)}")
-                    
-        with tab2:
-            st.markdown("#### Join TalentSpark")
-            name_reg = st.text_input("Full Name", placeholder="Jane Doe")
-            email_reg = st.text_input("Email", placeholder="jane@example.com")
-            pass_reg = st.text_input("Password", type="password", key="reg_pass")
-            role_reg = st.selectbox("Account Type", ["Candidate", "HR", "Admin"])
+        # Native Streamlit container for the login flow
+        with st.container(border=True):
+            tab1, tab2 = st.tabs(["🔐 Sign In", "📝 Create Account"])
             
-            if st.button("Start My Journey", use_container_width=True):
-                try:
-                    resp = requests.post(f"{API_URL}/users/register", json={
-                        "name": name_reg, "email": email_reg, "password": pass_reg, "role": role_reg
-                    }, timeout=5)
-                    if resp.status_code == 200:
-                        st.success("✨ Welcome aboard! You can now log in.")
-                    else:
-                        st.error(resp.json().get("detail", "Registration failed."))
-                except:
-                    st.error("⚠️ Backend connection failed.")
-        st.markdown("</div>", unsafe_allow_html=True)
+            with tab1:
+                st.markdown("### Welcome Back")
+                email = st.text_input("Email", placeholder="hr@example.com", key="login_email")
+                password = st.text_input("Password", type="password", key="login_pass")
+                if st.button("Access Dashboard", use_container_width=True):
+                    try:
+                        resp = requests.post(f"{API_URL}/users/login", json={
+                            "name": "", "email": email, "password": password, "role": ""
+                        }, timeout=5)
+                        if resp.status_code == 200:
+                            st.session_state['user'] = resp.json()
+                            st.success(f"Log-in successful! Redirecting...")
+                            st.rerun()
+                        else:
+                            st.error("Invalid credentials. Try: hr@example.com / password123")
+                    except requests.exceptions.ConnectionError:
+                        st.error("⚠️ Backend is offline. Please start your FastAPI server.")
+                    except Exception as e:
+                        st.error(f"Error: {str(e)}")
+                        
+            with tab2:
+                st.markdown("### Join TalentSpark")
+                name_reg = st.text_input("Full Name", placeholder="Jane Doe")
+                email_reg = st.text_input("Email", placeholder="jane@example.com")
+                pass_reg = st.text_input("Password", type="password", key="reg_pass")
+                role_reg = st.selectbox("Account Type", ["Candidate", "HR", "Admin"])
+                
+                if st.button("Start My Journey", use_container_width=True):
+                    try:
+                        resp = requests.post(f"{API_URL}/users/register", json={
+                            "name": name_reg, "email": email_reg, "password": pass_reg, "role": role_reg
+                        }, timeout=5)
+                        if resp.status_code == 200:
+                            st.success("✨ Welcome aboard! You can now log in.")
+                        else:
+                            st.error(resp.json().get("detail", "Registration failed."))
+                    except:
+                        st.error("⚠️ Backend connection failed.")
 else:
     user = st.session_state['user']
     st.sidebar.markdown(f"### ✨ {user['name']}")
