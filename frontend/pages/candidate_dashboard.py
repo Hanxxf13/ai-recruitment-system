@@ -36,7 +36,7 @@ with tab1:
                     st.markdown(f"""
                     <div class='job-card'>
                         <h3 style='margin-bottom: 5px;'>{job['title']}</h3>
-                        <p style='color: #818cf8; font-size: 0.8rem; font-weight: 600;'>NUKHBA ELITE MATCH</p>
+                        <p style='color: #818cf8; font-size: 0.8rem; font-weight: 600;'>ELITE MATCH</p>
                         <p>{job['description'][:150]}...</p>
                     </div>
                     """, unsafe_allow_html=True)

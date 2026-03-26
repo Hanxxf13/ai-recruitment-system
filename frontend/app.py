@@ -6,14 +6,14 @@ import os
 
 API_URL = os.getenv("API_URL", "http://localhost:8000")
 
-st.set_page_config(page_title="Nukhba | Elite Selection", page_icon="💎", layout="wide")
+st.set_page_config(page_title=" Elite Selection", page_icon="💎", layout="wide")
 inject_premium_css()
 
 # Header Section
 st.markdown("""
     <div style='text-align: center; padding: 1rem 0;'>
         <h1 class='nukhba-logo'>نخبة</h1>
-        <p class='nukhba-subtitle'>NUKHBA ELITE • SELECTION</p>
+        <p class='nukhba-subtitle'>ELITE • SELECTION</p>
     </div>
 """, unsafe_allow_html=True)
 
