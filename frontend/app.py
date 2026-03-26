@@ -13,7 +13,7 @@ inject_premium_css()
 st.markdown("""
     <div style='text-align: center; padding: 1rem 0;'>
         <h1 class='nukhba-logo'>نخبة</h1>
-        <p class='nukhba-subtitle'>NUKHBA • ELITE SELECTION</p>
+        <p class='nukhba-subtitle'>NUKHBA ELITE • SELECTION</p>
     </div>
 """, unsafe_allow_html=True)
 
