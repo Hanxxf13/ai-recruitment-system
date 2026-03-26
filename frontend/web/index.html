@@ -201,12 +201,6 @@
     <h2 style="font-size:1.9rem;font-weight:900;margin-bottom:6px">Let's join with us</h2>
     <p class="text-dim" style="margin-bottom:20px;font-size:.9rem">Start your elite recruitment journey.</p>
 
-    <!-- Step indicator -->
-    <div class="steps">
-      <div class="step-dot active" id="dot-1"></div>
-      <div class="step-dot"        id="dot-2"></div>
-    </div>
-
     <!-- STEP 1 — Profile -->
     <div id="reg-step-1">
       <div class="form-cols">
@@ -232,41 +226,9 @@
         <input type="password" id="reg-password" placeholder="Create a strong password" />
       </div>
 
-      <button class="btn btn-primary" id="btn-request-otp" onclick="requestOtp()">
-        📲 Request OTP
+      <button class="btn btn-primary" id="btn-register-direct" onclick="doRegister()">
+        ✨ Join the Elite
       </button>
-    </div>
-
-    <!-- STEP 2 — OTP Verification -->
-    <div id="reg-step-2" class="hidden">
-
-      <!-- Active countdown -->
-      <div class="otp-banner" id="otp-active">
-        <div class="otp-icon">📲</div>
-        <div class="otp-info">
-          <strong id="otp-email-display">your email</strong><br>
-          <small>OTP sent & expires in</small>
-        </div>
-        <div id="otp-timer">60s</div>
-      </div>
-
-      <!-- Expired -->
-      <div class="otp-expired-banner hidden" id="otp-expired">
-        ⏰ <strong>OTP Expired!</strong> Request a new one below.
-      </div>
-
-      <div class="form-group">
-        <label>Enter 4-Digit OTP</label>
-        <input type="text" id="otp-input" placeholder="0 0 0 0" maxlength="4"
-               style="font-size:1.6rem;letter-spacing:8px;text-align:center;font-weight:900" />
-      </div>
-
-      <button class="btn btn-primary"  id="btn-verify"  onclick="verifyOtp()">✅ Verify &amp; Create Account</button>
-      <div style="height:10px"></div>
-      <div style="display:flex;gap:10px;margin-top:4px">
-        <button class="btn btn-ghost" id="btn-resend" onclick="requestOtp(true)" disabled>🔄 Resend OTP</button>
-        <button class="btn btn-ghost" onclick="goToStep1()">← Go Back</button>
-      </div>
     </div>
   </div>
   <!-- end register -->
@@ -309,71 +271,25 @@
     } finally { setLoading(btn, false); }
   }
 
-  // ── Request OTP ──
-  let regData = {};
-  async function requestOtp(isResend = false) {
-    const btn = document.getElementById(isResend ? 'btn-resend' : 'btn-request-otp');
-    if (!isResend) {
-      const name     = document.getElementById('reg-name').value.trim();
-      const role     = document.getElementById('reg-role').value;
-      const email    = document.getElementById('reg-email').value.trim();
-      const password = document.getElementById('reg-password').value;
-      if (!name||!email||!password) return showToast('Please fill all fields', 'error');
-      regData = { name, email, password, role };
-    }
+  // ── Direct Registration ──
+  async function doRegister() {
+    const btn = document.getElementById('btn-register-direct');
+    const name     = document.getElementById('reg-name').value.trim();
+    const role     = document.getElementById('reg-role').value;
+    const email    = document.getElementById('reg-email').value.trim();
+    const password = document.getElementById('reg-password').value;
+
+    if (!name || !email || !password) return showToast('Please fill all fields', 'error');
 
     setLoading(btn, true);
     try {
-      const res = await api('POST', '/users/request-otp', null, { email: regData.email });
-      regData._otp = res.otp;
-      document.getElementById('otp-email-display').textContent = regData.email;
-
-      // Show step 2
-      document.getElementById('reg-step-1').classList.add('hidden');
-      document.getElementById('reg-step-2').classList.remove('hidden');
-      document.getElementById('otp-active').classList.remove('hidden');
-      document.getElementById('otp-expired').classList.add('hidden');
-      document.getElementById('btn-verify').disabled = false;
-      document.getElementById('btn-resend').disabled = true;
-      document.getElementById('otp-input').value = '';
-      document.getElementById('otp-timer').style.color = 'var(--gold)';
-
-      // Update step dots
-      document.getElementById('dot-1').classList.remove('active');
-      document.getElementById('dot-1').classList.add('done');
-      document.getElementById('dot-2').classList.add('active');
-
-      startOtpCountdown(60, () => {});
-      showToast('OTP sent to ' + regData.phone + ' 📲', 'success');
-    } catch(e) {
-      showToast('Failed to send OTP: ' + e.message, 'error');
-    } finally { setLoading(btn, false); }
-  }
-
-  // ── Verify OTP ──
-  async function verifyOtp() {
-    const btn = document.getElementById('btn-verify');
-    const entered = document.getElementById('otp-input').value.trim();
-    if (entered.length !== 4) return showToast('Enter the full 4-digit OTP', 'error');
-    if (entered !== String(regData._otp)) return showToast('❌ Wrong OTP. Try again or resend.', 'error');
-
-    setLoading(btn, true);
-    try {
-      const user = await api('POST', '/users/register', regData);
-      showToast('🎉 Elite account created! Signing you in...', 'success');
+      const user = await api('POST', '/users/register', { name, email, password, role });
+      showToast('🎉 Elite account created! Welcome to Nukhba.', 'success');
       session.set(user);
       setTimeout(() => redirectByRole(user), 1200);
     } catch(e) {
       showToast(e.message || 'Registration failed', 'error');
     } finally { setLoading(btn, false); }
-  }
-
-  function goToStep1() {
-    document.getElementById('reg-step-2').classList.add('hidden');
-    document.getElementById('reg-step-1').classList.remove('hidden');
-    document.getElementById('dot-1').classList.remove('done');
-    document.getElementById('dot-1').classList.add('active');
-    document.getElementById('dot-2').classList.remove('active');
   }
 
   // Enter key shortcuts
