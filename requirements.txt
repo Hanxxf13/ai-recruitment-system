@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+sqlalchemy
+pydantic
+python-multipart
+passlib[bcrypt]
+spacy
+streamlit
+requests
+pandas
+# spacy model should be downloaded via command: python -m spacy download en_core_web_sm
