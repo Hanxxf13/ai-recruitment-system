@@ -232,29 +232,6 @@
         <input type="password" id="reg-password" placeholder="Create a strong password" />
       </div>
 
-      <div class="form-cols">
-        <div class="form-group">
-          <label>Country</label>
-          <select id="reg-country">
-            <option value="United Arab Emirates|+971|🇦🇪">🇦🇪 UAE (+971)</option>
-            <option value="Saudi Arabia|+966|🇸🇦">🇸🇦 Saudi Arabia (+966)</option>
-            <option value="Qatar|+974|🇶🇦">🇶🇦 Qatar (+974)</option>
-            <option value="Oman|+968|🇴🇲">🇴🇲 Oman (+968)</option>
-            <option value="Kuwait|+965|🇰🇼">🇰🇼 Kuwait (+965)</option>
-            <option value="Bahrain|+973|🇧🇭">🇧🇭 Bahrain (+973)</option>
-            <option value="United States|+1|🇺🇸">🇺🇸 USA (+1)</option>
-            <option value="United Kingdom|+44|🇬🇧">🇬🇧 UK (+44)</option>
-            <option value="India|+91|🇮🇳">🇮🇳 India (+91)</option>
-            <option value="Pakistan|+92|🇵🇰">🇵🇰 Pakistan (+92)</option>
-            <option value="Jordan|+962|🇯🇴">🇯🇴 Jordan (+962)</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Phone Number</label>
-          <input type="tel" id="reg-phone" placeholder="50 123 4567" />
-        </div>
-      </div>
-
       <button class="btn btn-primary" id="btn-request-otp" onclick="requestOtp()">
         📲 Request OTP
       </button>
@@ -267,8 +244,8 @@
       <div class="otp-banner" id="otp-active">
         <div class="otp-icon">📲</div>
         <div class="otp-info">
-          <strong id="otp-phone-display">your number</strong><br>
-          <small>OTP expires in</small>
+          <strong id="otp-email-display">your email</strong><br>
+          <small>OTP sent & expires in</small>
         </div>
         <div id="otp-timer">60s</div>
       </div>
@@ -341,18 +318,15 @@
       const role     = document.getElementById('reg-role').value;
       const email    = document.getElementById('reg-email').value.trim();
       const password = document.getElementById('reg-password').value;
-      const country  = document.getElementById('reg-country').value;
-      const phone    = document.getElementById('reg-phone').value.trim();
-      const [cName, cCode] = country.split('|');
-      if (!name||!email||!password||!phone) return showToast('Please fill all fields', 'error');
-      regData = { name, email, password, role, country: `${cName} ${cCode}`, phone: `${cCode}${phone}` };
+      if (!name||!email||!password) return showToast('Please fill all fields', 'error');
+      regData = { name, email, password, role };
     }
 
     setLoading(btn, true);
     try {
-      const res = await api('POST', '/users/request-otp', null, { email: regData.email, phone: regData.phone });
+      const res = await api('POST', '/users/request-otp', null, { email: regData.email });
       regData._otp = res.otp;
-      document.getElementById('otp-phone-display').textContent = regData.phone;
+      document.getElementById('otp-email-display').textContent = regData.email;
 
       // Show step 2
       document.getElementById('reg-step-1').classList.add('hidden');

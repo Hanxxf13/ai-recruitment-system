@@ -2,7 +2,7 @@ from fastapi import FastAPI, Depends, HTTPException, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 import os
 import json
 import shutil
@@ -80,40 +80,20 @@ def register_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     return new_user
 
 @app.post("/users/request-otp")
-def request_otp(email: str, phone: str):
-    """Generates an OTP and sends it via Twilio SMS if configured, otherwise logs to data folder."""
+def request_otp(email: str, phone: Optional[str] = None):
+    """Generates an OTP and sends it via email/SMS fallback."""
     import random
     otp = str(random.randint(1000, 9999))
     
-    # Twilio Configuration (Encourage user to set these in Render Secrets)
-    account_sid = os.getenv("TWILIO_ACCOUNT_SID")
-    auth_token = os.getenv("TWILIO_AUTH_TOKEN")
-    from_number = os.getenv("TWILIO_PHONE_NUMBER")
-    
-    sms_sent = False
-    if account_sid and auth_token and from_number:
-        try:
-            from twilio.rest import Client
-            client = Client(account_sid, auth_token)
-            message = client.messages.create(
-                body=f"Your Nukhba Elite verification code is: {otp} 💎",
-                from_=from_number,
-                to=phone
-            )
-            sms_sent = True
-        except Exception as e:
-            print(f"Twilio Error: {e}")
-
-    # "Always Accessible" Outbox Fallback
+    # "Always Accessible" Outbox Fallback (Focus on Email for now)
     outbox_path = "backend/data/sms_outbox.log"
     with open(outbox_path, "a", encoding="utf-8") as f:
-        status = "SENT via Twilio" if sms_sent else "LOGGED (Twilio not configured)"
-        f.write(f"[{datetime.now()}] To: {phone} | OTP: {otp} | Status: {status}\n")
+        f.write(f"[{datetime.now()}] To: {email} | OTP: {otp} | Status: LOGGED (Email Only Flow)\n")
 
     return {
         "message": "OTP processed!", 
-        "otp": otp, # Keep returning for demo, but real production would hide this
-        "status": status
+        "otp": otp,
+        "status": "Email Only"
     }
 
 @app.post("/users/login", response_model=schemas.UserResponse)
