@@ -10,6 +10,8 @@ class User(Base):
     email = Column(String, unique=True, index=True)
     password = Column(String)
     role = Column(String) # "Admin", "HR", "Candidate"
+    phone = Column(String, nullable=True)
+    country = Column(String, nullable=True)
     
     jobs = relationship("Job", back_populates="hr_user")
     applications = relationship("Application", back_populates="candidate")

@@ -7,12 +7,16 @@ class UserCreate(BaseModel):
     email: str
     password: str
     role: str
+    phone: Optional[str] = None
+    country: Optional[str] = None
 
 class UserResponse(BaseModel):
     id: int
     name: str
     email: str
     role: str
+    phone: Optional[str] = None
+    country: Optional[str] = None
     
     class Config:
         from_attributes = True

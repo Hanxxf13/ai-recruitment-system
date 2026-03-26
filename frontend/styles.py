@@ -109,10 +109,93 @@ def inject_premium_css():
         border-bottom: 2px solid var(--accent-gold) !important;
     }
 
-    /* Expander styling */
-    .streamlit-expanderHeader {
-        background-color: transparent !important;
-        border-bottom: 1px solid var(--glass-border) !important;
+    /* Split Screen Layout (Similar to Reference) */
+    .split-container {
+        display: flex;
+        background: white;
+        border-radius: 30px;
+        overflow: hidden;
+        box-shadow: 0 30px 100px rgba(0,0,0,0.5);
+        min-height: 85vh;
+        margin: 40px auto;
+        color: #1a1a1a;
+        max-width: 1400px;
+    }
+    
+    .side-pane {
+        flex: 1.4;
+        background-size: cover;
+        background-position: center;
+        padding: 60px;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        position: relative;
+    }
+    
+    .side-pane::after {
+        content: "";
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 60%);
+        z-index: 1;
+    }
+    
+    .quote-box {
+        position: relative;
+        z-index: 2;
+        color: white;
+        font-size: 2.2rem;
+        font-weight: 700;
+        line-height: 1.2;
+        max-width: 90%;
+    }
+    
+    .form-pane {
+        flex: 1;
+        background: white;
+        padding: 60px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+    
+    .join-link-tabs {
+        display: flex;
+        gap: 20px;
+        margin: 30px 0;
+    }
+    
+    .join-link {
+        padding: 12px 28px;
+        border-radius: 30px;
+        background: #f5f5f5;
+        font-weight: 700;
+        color: #333;
+        font-size: 0.95rem;
+    }
+    
+    .join-link.active {
+        background: #1a1a1a;
+        color: white;
+    }
+
+    .stTextInput > div > div > input {
+        border-radius: 14px !important;
+        border: 1px solid #ddd !important;
+        padding: 14px 20px !important;
+        background: white !important;
+        color: black !important;
+    }
+    
+    .continue-btn button {
+        background: #3e937d !important;
+        color: white !important;
+        border-radius: 14px !important;
+        padding: 18px !important;
+        font-size: 1.2rem !important;
+        font-weight: 700 !important;
+        margin-top: 20px !important;
     }
     </style>
     """, unsafe_allow_html=True)

@@ -21,78 +21,59 @@ if 'user' not in st.session_state:
     st.session_state['user'] = None
 
 if st.session_state['user'] is None:
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
-        # Native Streamlit container for the login flow
-        with st.container(border=True):
-            tab1, tab2 = st.tabs(["🔐 Sign In", "📝 Create Account"])
-            
-            with tab1:
-                st.markdown("### Welcome Back")
-                email = st.text_input("Email", placeholder="hr@example.com", key="login_email")
-                password = st.text_input("Password", type="password", key="login_pass")
-                if st.button("Access Dashboard", use_container_width=True):
-                    try:
-                        resp = requests.post(f"{API_URL}/users/login", json={
-                            "name": "", "email": email, "password": password, "role": ""
-                        }, timeout=10)
-                        if resp.status_code == 200:
-                            st.session_state['user'] = resp.json()
-                            st.success(f"Log-in successful! Redirecting...")
-                            st.rerun()
-                        else:
-                            st.error("Invalid credentials. Please use: hr@example.com / password123")
-                    except requests.exceptions.ConnectionError:
-                        st.error(f"⚠️ Connection Failed: Backend at {API_URL} is unreachable.")
-                    except Exception as e:
-                        st.error(f"Error: {str(e)}")
-                
-                # Forgot Password Section
-                with st.expander("🔑 Forgot Password?"):
-                    st.write("Reset your elite credentials")
-                    reset_email = st.text_input("Your Registered Email", key="reset_email")
-                    new_password = st.text_input("New Password", type="password", key="reset_pass")
-                    if st.button("Reset Password", use_container_width=True):
-                        try:
-                            resp = requests.put(f"{API_URL}/users/reset-password", json={
-                                "name": "any", "email": reset_email, "password": new_password, "role": "any"
-                            })
-                            if resp.status_code == 200:
-                                st.success("🚀 Password updated! You can now sign in.")
-                            else:
-                                st.error("Account not found. Please check the email.")
-                        except:
-                            st.error("Backend offline.")
-                
-                # Hidden connection health check
-                with st.expander("🔍 System Connection Debug"):
-                    st.write(f"Testing connectivity to: `{API_URL}`")
-                    if st.button("Run Diagnostic"):
-                        try:
-                            health = requests.get(f"{API_URL}/", timeout=5)
-                            st.write(f"✅ Status Code: {health.status_code}")
-                            st.success("Backend is reachable!")
-                        except Exception as e:
-                            st.error(f"❌ Failed: {str(e)}")
-                        
-            with tab2:
-                st.markdown("### Join TalentSpark")
-                name_reg = st.text_input("Full Name", placeholder="Jane Doe")
-                email_reg = st.text_input("Email", placeholder="jane@example.com")
-                pass_reg = st.text_input("Password", type="password", key="reg_pass")
-                role_reg = st.selectbox("Account Type", ["Candidate", "HR", "Admin"])
-                
-                if st.button("Start My Journey", use_container_width=True):
-                    try:
-                        resp = requests.post(f"{API_URL}/users/register", json={
-                            "name": name_reg, "email": email_reg, "password": pass_reg, "role": role_reg
-                        }, timeout=5)
-                        if resp.status_code == 200:
-                            st.success("✨ Welcome aboard! You can now log in.")
-                        else:
-                            st.error(resp.json().get("detail", "Registration failed."))
-                    except:
-                        st.error("⚠️ Backend connection failed.")
+    # Use 2 columns to mimic the split screen image
+    pane_left, pane_right = st.columns([1.5, 1], gap="large")
+    
+    with pane_left:
+        # Side image with testimonial
+        st.markdown(f"""
+            <div class='side-pane' style='background-image: url("https://raw.githubusercontent.com/Hanxxf13/ai-recruitment-system/main/frontend/nukhba_bg.png"); min-height: 850px; border-radius: 30px;'>
+                <div class='quote-box'>
+                    "Nukhba is where precision meets talent. We found our elite engineering team in a matter of days."
+                    <br><br>
+                    <span style='font-size: 1.1rem; opacity: 0.8; font-weight: 400;'>Sarah Al-Mulla<br>VP of Engineering</span>
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
+        st.info("💡 **Demo Credentials**: `hr@example.com` / `password123`")
+        
+    with pane_right:
+        st.markdown("<div style='padding: 20px 40px;'>", unsafe_allow_html=True)
+        # Nukhba Logo (Black on White for this screen)
+        st.markdown("<h1 style='font-family: Amiri; font-size: 3.5rem; color: #000; margin-bottom: 40px;'>نخبة</h1>", unsafe_allow_html=True)
+        
+        st.markdown("<h2 style='font-size: 2.2rem; font-weight: 800; color: #1a1a1a;'>Let's join with us</h2>", unsafe_allow_html=True)
+        st.markdown("<p style='color: #666; font-size: 1rem; margin-top: -10px;'>Sign in to your elite talent portal.</p>", unsafe_allow_html=True)
+        
+        # Simulated tabs from the image
+        st.markdown("""
+            <div class='join-link-tabs'>
+                <div class='join-link active'>Email</div>
+                <div class='join-link'>Phone</div>
+                <div class='join-link'>Social</div>
+            </div>
+        """, unsafe_allow_html=True)
+        
+        email = st.text_input("Email address", placeholder="hr@example.com", key="login_email_elite")
+        password = st.text_input("Password", type="password", key="login_pass_elite")
+        
+        st.markdown("<div class='continue-btn'>", unsafe_allow_html=True)
+        if st.button("Continue", use_container_width=True):
+            try:
+                resp = requests.post(f"{API_URL}/users/login", json={
+                    "name": "", "email": email, "password": password, "role": ""
+                }, timeout=10)
+                if resp.status_code == 200:
+                    st.session_state['user'] = resp.json()
+                    st.rerun()
+                else:
+                    st.error("Invalid credentials. Please use: hr@example.com / password123")
+            except:
+                st.error("Connection failed. Check backend.")
+        st.markdown("</div>", unsafe_allow_html=True)
+        
+        st.markdown("<p style='text-align: center; color: #999; margin-top: 40px; font-size: 0.9rem;'>Need help? Contact support</p>", unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
 else:
     user = st.session_state['user']
     st.sidebar.markdown(f"### ✨ {user['name']}")
