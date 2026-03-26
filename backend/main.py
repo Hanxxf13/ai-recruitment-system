@@ -56,6 +56,15 @@ def login_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Invalid credentials")
     return db_user
 
+@app.put("/users/reset-password")
+def reset_password(data: schemas.UserCreate, db: Session = Depends(get_db)):
+    db_user = db.query(models.User).filter(models.User.email == data.email).first()
+    if not db_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    db_user.password = data.password
+    db.commit()
+    return {"message": "Password reset successfully"}
+
 # --- JOB ENDPOINTS ---
 @app.post("/jobs", response_model=schemas.JobResponse)
 def create_job(job: schemas.JobCreate, hr_id: int, db: Session = Depends(get_db)):

@@ -47,6 +47,23 @@ if st.session_state['user'] is None:
                     except Exception as e:
                         st.error(f"Error: {str(e)}")
                 
+                # Forgot Password Section
+                with st.expander("🔑 Forgot Password?"):
+                    st.write("Reset your elite credentials")
+                    reset_email = st.text_input("Your Registered Email", key="reset_email")
+                    new_password = st.text_input("New Password", type="password", key="reset_pass")
+                    if st.button("Reset Password", use_container_width=True):
+                        try:
+                            resp = requests.put(f"{API_URL}/users/reset-password", json={
+                                "name": "any", "email": reset_email, "password": new_password, "role": "any"
+                            })
+                            if resp.status_code == 200:
+                                st.success("🚀 Password updated! You can now sign in.")
+                            else:
+                                st.error("Account not found. Please check the email.")
+                        except:
+                            st.error("Backend offline.")
+                
                 # Hidden connection health check
                 with st.expander("🔍 System Connection Debug"):
                     st.write(f"Testing connectivity to: `{API_URL}`")
