@@ -20,7 +20,8 @@ def calculate_fit_score(resume_text: str, job_requirements: str) -> dict:
         
     matched = [skill for skill in skills if skill in resume_lower]
     
-    score = round(float(len(matched) / len(skills)) * 100, 2)
+    raw_score = (len(matched) / len(skills)) * 100.0
+    score = round(raw_score, 2)
     
     feedback = f"Matched {len(matched)} out of {len(skills)} inferred key requirements. "
     if score > 80:

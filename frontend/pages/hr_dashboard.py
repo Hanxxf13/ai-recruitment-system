@@ -1,10 +1,12 @@
 import streamlit as st
 import requests
 import pandas as pd
+from styles import inject_premium_css
 
 API_URL = "http://localhost:8000"
 
-st.set_page_config(page_title="HR Dashboard", layout="wide")
+st.set_page_config(page_title="HR Command Center", layout="wide")
+inject_premium_css()
 
 if 'user' not in st.session_state or st.session_state['user'] is None or st.session_state['user']['role'] != 'HR':
     st.warning("Please login as HR from the main app.")
@@ -12,42 +14,42 @@ if 'user' not in st.session_state or st.session_state['user'] is None or st.sess
     
 user = st.session_state['user']
 
-st.title("💼 HR Manager Dashboard")
+st.title("💼 HR Command Center")
 
-tab1, tab2 = st.tabs(["Post a Job", "Review Applications"])
+tab1, tab2 = st.tabs(["➕ Post a Job", "🔍 AI Application Review"])
 
 with tab1:
-    st.header("Create New Job Posting")
-    title = st.text_input("Job Title")
-    description = st.text_area("Job Description")
-    requirements = st.text_area("Requirements (Keywords, Skills)")
-    
-    if st.button("Post Job"):
-        res = requests.post(f"{API_URL}/jobs?hr_id={user['id']}", json={
-            "title": title,
-            "description": description,
-            "requirements": requirements
-        })
-        if res.status_code == 200:
-            st.success("Job posted successfully!")
-            st.code(res.json())
-        else:
-            st.error("Failed to post job")
+    col1, col2 = st.columns([1, 1])
+    with col1:
+        st.subheader("Draft New Listing")
+        title = st.text_input("Exact Job Title", placeholder="e.g. Lead Fullstack Engineer")
+        description = st.text_area("Detailed Description", height=200)
+    with col2:
+        st.subheader("AI Search Parameters")
+        requirements = st.text_area("Key Requirements (Comma-separated for AI)", height=200, placeholder="Python, AWS, React, Project Management")
+        
+        if st.button("Deploy Listing", use_container_width=True):
+            res = requests.post(f"{API_URL}/jobs?hr_id={user['id']}", json={
+                "title": title, "description": description, "requirements": requirements
+            })
+            if res.status_code == 200:
+                st.success("Listing is now LIVE on TalentSpark!")
+            else:
+                st.error("Failed to post.")
 
 with tab2:
-    st.header("AI Application Review")
+    st.subheader("Intelligent Screening Queue")
     
-    # Get all jobs
     jobs_res = requests.get(f"{API_URL}/jobs")
     if jobs_res.status_code == 200:
         jobs = jobs_res.json()
         my_jobs = [j for j in jobs if j['hr_id'] == user['id']]
         
         if not my_jobs:
-            st.info("You haven't posted any jobs yet.")
+            st.info("No active listings found.")
         else:
             job_titles = {j['title']: j['id'] for j in my_jobs}
-            selected_job = st.selectbox("Select Job to review applications", list(job_titles.keys()))
+            selected_job = st.selectbox("Select Active Role:", list(job_titles.keys()))
             
             if selected_job:
                 job_id = job_titles[selected_job]
@@ -56,24 +58,26 @@ with tab2:
                 if apps_res.status_code == 200:
                     apps = apps_res.json()
                     if not apps:
-                        st.info("No applications yet for this job.")
+                        st.info("Waiting for first applicant...")
                     else:
                         for app in apps:
-                            with st.expander(f"Application ID: {app['id']} - Candidate ID: {app['candidate_id']} | Score: {app['ai_score']}"):
-                                st.write("**Resume Snippet:**")
-                                st.text(app['resume_text'][:200] + "...")
+                            score_color = "green" if app['ai_score'] > 75 else "orange" if app['ai_score'] > 40 else "red"
+                            with st.expander(f"Applicant #{app['id']} | Match Score: {app['ai_score']}%"):
+                                st.markdown(f"#### Fit Profile: <span style='color:{score_color}'>{app['ai_score']}%</span>", unsafe_allow_html=True)
+                                st.info(f"**AI Insight:** {app['ai_feedback']}")
                                 
-                                st.metric("AI Match Score", f"{app['ai_score']}%")
-                                st.info(f"**AI Explainability:** {app['ai_feedback']}")
+                                st.write("**Resume Highlights:**")
+                                st.code(app['resume_text'][:500] + "...")
                                 
-                                st.write(f"Current Status: **{app['status']}**")
-                                
-                                new_status = st.selectbox("Update Status", ["Screened", "Interviewing", "Rejected", "Hired"], key=f"status_{app['id']}")
-                                if st.button("Save Status", key=f"btn_{app['id']}"):
-                                    res = requests.put(f"{API_URL}/applications/{app['id']}/status?status={new_status}")
-                                    if res.status_code == 200:
-                                        st.success("Updated successfully.")
-                                    else:
-                                        st.error("Failed to update.")
+                                st.divider()
+                                s1, s2 = st.columns([2, 1])
+                                with s1:
+                                    new_status = st.selectbox("Pipeline Status", ["Screened", "Interviewing", "Rejected", "Hired"], key=f"status_{app['id']}")
+                                with s2:
+                                    if st.button("Update", key=f"btn_{app['id']}", use_container_width=True):
+                                        res = requests.put(f"{API_URL}/applications/{app['id']}/status?status={new_status}")
+                                        if res.status_code == 200:
+                                            st.success("Done!")
+                                            st.rerun()
                 else:
-                    st.error("Could not fetch applications.")
+                    st.error("Error retrieving queue.")
