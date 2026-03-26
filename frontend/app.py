@@ -12,8 +12,8 @@ inject_premium_css()
 # Header Section
 st.markdown("""
     <div style='text-align: center; padding: 1rem 0;'>
-        <h1 class='nukhba-logo'>NUKHBA</h1>
-        <p style='font-size: 1.2rem; opacity: 0.8; letter-spacing: 2px;'>ELITE TALENT INTELLIGENCE</p>
+        <h1 class='nukhba-logo'>نخبة</h1>
+        <p class='nukhba-subtitle'>NUKHBA • ELITE SELECTION</p>
     </div>
 """, unsafe_allow_html=True)
 

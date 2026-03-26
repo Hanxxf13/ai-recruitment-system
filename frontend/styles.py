@@ -15,8 +15,8 @@ def inject_premium_css():
         --text-color: #f8fafc;
     }
 
-    /* Stylish font import */
-    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap');
+    /* Stylish font imports */
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Amiri:wght@700&display=swap');
     
     .stApp {
         font-family: 'Outfit', sans-serif;
@@ -24,16 +24,23 @@ def inject_premium_css():
     }
 
     .nukhba-logo {
-        font-family: 'Outfit', sans-serif;
-        font-size: 3.5rem;
-        font-weight: 800;
-        letter-spacing: -1px;
+        font-family: 'Amiri', serif;
+        font-size: 4.5rem;
+        font-weight: 700;
         background: linear-gradient(to right, #818cf8, #fb7185);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         margin: 0;
         padding: 0;
-        line-height: 1.1;
+        line-height: 1;
+    }
+    
+    .nukhba-subtitle {
+        font-family: 'Outfit', sans-serif;
+        font-size: 1rem;
+        letter-spacing: 4px;
+        opacity: 0.7;
+        margin-top: -10px;
     }
 
     /* Glassmorphism containers */
