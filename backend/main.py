@@ -12,6 +12,16 @@ models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Nukhba Elite API | Talent Intelligence")
 
+# Auto-seed on startup for Render ephemeral storage
+@app.on_event("startup")
+def startup_event():
+    from .database import SessionLocal
+    db = SessionLocal()
+    try:
+        seed_database(db)
+    finally:
+        db.close()
+
 # CORS for frontend
 app.add_middleware(
     CORSMiddleware,
