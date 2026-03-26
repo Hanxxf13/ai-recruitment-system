@@ -44,6 +44,17 @@ def register_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
+    # Persistent Backup (JSON)
+    backup_path = "backend/data/users_backup.json"
+    users_data = []
+    if os.path.exists(backup_path):
+        with open(backup_path, "r") as f:
+            try: users_data = json.load(f)
+            except: pass
+    users_data.append({"name": user.name, "email": user.email, "role": user.role, "phone": user.phone, "country": user.country, "timestamp": str(datetime.now())})
+    with open(backup_path, "w") as f:
+        json.dump(users_data, f, indent=4)
+        
     return new_user
 
 @app.post("/users/request-otp")
@@ -116,7 +127,19 @@ def apply_job(app_data: schemas.ApplicationCreate, candidate_id: int, db: Sessio
     db.add(new_app)
     db.commit()
     db.refresh(new_app)
+    # Persistent Backup (TXT)
+    resume_filename = f"backend/data/resumes/app_{new_app.id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
+    with open(resume_filename, "w", encoding="utf-8") as f:
+        f.write(f"Candidate ID: {candidate_id}\nJob ID: {application.job_id}\nScore: {score}\n\n{application.resume_text}")
+        
     return new_app
+
+@app.get("/system/download-data")
+def download_data():
+    """Zips the data folder and returns it for persistent off-site backup."""
+    zip_path = "system_backup"
+    shutil.make_archive(zip_path, 'zip', "backend/data")
+    return FileResponse(path=f"{zip_path}.zip", filename=f"Nukhba_Backup_{datetime.now().strftime('%Y%m%d')}.zip", media_type='application/zip')
 
 @app.get("/applications/{job_id}", response_model=List[schemas.ApplicationResponse])
 def get_applications_for_job(job_id: int, db: Session = Depends(get_db)):

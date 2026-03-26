@@ -6,7 +6,7 @@ import os
 
 API_URL = os.getenv("API_URL", "http://localhost:8000")
 
-st.set_page_config(page_title="Nukhba | Candidate Portal", page_icon="💎", layout="wide")
+st.set_page_config(page_title="Elite | Candidate Portal", page_icon="💎", layout="wide")
 inject_premium_css()
 
 if 'user' not in st.session_state or st.session_state['user'] is None or st.session_state['user']['role'] != 'Candidate':
