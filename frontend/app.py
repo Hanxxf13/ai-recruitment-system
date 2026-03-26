@@ -35,17 +35,28 @@ if st.session_state['user'] is None:
                     try:
                         resp = requests.post(f"{API_URL}/users/login", json={
                             "name": "", "email": email, "password": password, "role": ""
-                        }, timeout=5)
+                        }, timeout=10)
                         if resp.status_code == 200:
                             st.session_state['user'] = resp.json()
                             st.success(f"Log-in successful! Redirecting...")
                             st.rerun()
                         else:
-                            st.error("Invalid credentials. Try: hr@example.com / password123")
+                            st.error("Invalid credentials. Please use: hr@example.com / password123")
                     except requests.exceptions.ConnectionError:
-                        st.error("⚠️ Backend is offline. Please start your FastAPI server.")
+                        st.error(f"⚠️ Connection Failed: Backend at {API_URL} is unreachable.")
                     except Exception as e:
                         st.error(f"Error: {str(e)}")
+                
+                # Hidden connection health check
+                with st.expander("🔍 System Connection Debug"):
+                    st.write(f"Testing connectivity to: `{API_URL}`")
+                    if st.button("Run Diagnostic"):
+                        try:
+                            health = requests.get(f"{API_URL}/", timeout=5)
+                            st.write(f"✅ Status Code: {health.status_code}")
+                            st.success("Backend is reachable!")
+                        except Exception as e:
+                            st.error(f"❌ Failed: {str(e)}")
                         
             with tab2:
                 st.markdown("### Join TalentSpark")
