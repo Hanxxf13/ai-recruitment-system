@@ -64,11 +64,40 @@ def register_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
 
 @app.post("/users/request-otp")
 def request_otp(email: str, phone: str):
-    # Simulated OTP generation for demo
+    """Generates an OTP and sends it via Twilio SMS if configured, otherwise logs to data folder."""
     import random
     otp = str(random.randint(1000, 9999))
-    print(f"DEBUG: OTP for {email} / {phone} is {otp}")
-    return {"message": "OTP sent!", "otp": otp} # Returning OTP for demo visibility
+    
+    # Twilio Configuration (Encourage user to set these in Render Secrets)
+    account_sid = os.getenv("TWILIO_ACCOUNT_SID")
+    auth_token = os.getenv("TWILIO_AUTH_TOKEN")
+    from_number = os.getenv("TWILIO_PHONE_NUMBER")
+    
+    sms_sent = False
+    if account_sid and auth_token and from_number:
+        try:
+            from twilio.rest import Client
+            client = Client(account_sid, auth_token)
+            message = client.messages.create(
+                body=f"Your Nukhba Elite verification code is: {otp} 💎",
+                from_=from_number,
+                to=phone
+            )
+            sms_sent = True
+        except Exception as e:
+            print(f"Twilio Error: {e}")
+
+    # "Always Accessible" Outbox Fallback
+    outbox_path = "backend/data/sms_outbox.log"
+    with open(outbox_path, "a", encoding="utf-8") as f:
+        status = "SENT via Twilio" if sms_sent else "LOGGED (Twilio not configured)"
+        f.write(f"[{datetime.now()}] To: {phone} | OTP: {otp} | Status: {status}\n")
+
+    return {
+        "message": "OTP processed!", 
+        "otp": otp, # Keep returning for demo, but real production would hide this
+        "status": status
+    }
 
 @app.post("/users/login", response_model=schemas.UserResponse)
 def login_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
