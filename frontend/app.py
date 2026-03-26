@@ -2,7 +2,9 @@ import streamlit as st
 import requests
 from styles import inject_premium_css
 
-API_URL = "http://localhost:8000"
+import os
+
+API_URL = os.getenv("API_URL", "http://localhost:8000")
 
 st.set_page_config(page_title="TalentSpark AI", page_icon="✨", layout="wide")
 inject_premium_css()
