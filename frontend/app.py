@@ -6,16 +6,14 @@ import os
 
 API_URL = os.getenv("API_URL", "http://localhost:8000")
 
-st.set_page_config(page_title="TalentSpark AI", page_icon="✨", layout="wide")
+st.set_page_config(page_title="Nukhba | Elite Selection", page_icon="💎", layout="wide")
 inject_premium_css()
 
 # Header Section
 st.markdown("""
-    <div style='text-align: center; padding: 2rem 0;'>
-        <h1 style='font-size: 3rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;'>
-            ✨ TalentSpark AI
-        </h1>
-        <p style='font-size: 1.2rem; opacity: 0.8;'>The Next-Gen Intelligent Recruitment Ecosystem</p>
+    <div style='text-align: center; padding: 1rem 0;'>
+        <h1 class='nukhba-logo'>NUKHBA</h1>
+        <p style='font-size: 1.2rem; opacity: 0.8; letter-spacing: 2px;'>ELITE TALENT INTELLIGENCE</p>
     </div>
 """, unsafe_allow_html=True)
 
@@ -78,8 +76,8 @@ else:
         
     st.markdown(f"""
         <div style='text-align: center; margin-top: 50px;'>
-            <h2>Welcome to TalentSpark, {user['name']}!</h2>
-            <p>Your AI-powered career journey starts here.</p>
+            <h2>Welcome to Nukhba, {user['name']}!</h2>
+            <p>Your elite AI-powered recruitment journey starts here.</p>
         </div>
     """, unsafe_allow_html=True)
     

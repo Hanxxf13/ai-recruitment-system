@@ -6,7 +6,7 @@ import os
 
 API_URL = os.getenv("API_URL", "http://localhost:8000")
 
-st.set_page_config(page_title="Candidate Portal", layout="wide")
+st.set_page_config(page_title="Nukhba | Candidate Portal", page_icon="💎", layout="wide")
 inject_premium_css()
 
 if 'user' not in st.session_state or st.session_state['user'] is None or st.session_state['user']['role'] != 'Candidate':
@@ -15,6 +15,7 @@ if 'user' not in st.session_state or st.session_state['user'] is None or st.sess
     
 user = st.session_state['user']
 
+st.markdown("<h1 class='nukhba-logo' style='font-size: 2.5rem;'>NUKHBA</h1>", unsafe_allow_html=True)
 st.title("👤 Candidate Portal")
 
 tab1, tab2 = st.tabs(["🚀 Explore Opportunities", "📤 My Submissions"])
@@ -35,7 +36,7 @@ with tab1:
                     st.markdown(f"""
                     <div class='job-card'>
                         <h3 style='margin-bottom: 5px;'>{job['title']}</h3>
-                        <p style='color: #888; font-size: 0.9rem;'>TalentSpark Match Enabled</p>
+                        <p style='color: #818cf8; font-size: 0.8rem; font-weight: 600;'>NUKHBA ELITE MATCH</p>
                         <p>{job['description'][:150]}...</p>
                     </div>
                     """, unsafe_allow_html=True)

@@ -10,7 +10,7 @@ from .services.ai_screening import calculate_fit_score
 
 models.Base.metadata.create_all(bind=engine)
 
-app = FastAPI(title="Recruitment System API")
+app = FastAPI(title="Nukhba Elite API | Talent Intelligence")
 
 # CORS for frontend
 app.add_middleware(

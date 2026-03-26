@@ -7,7 +7,7 @@ import os
 
 API_URL = os.getenv("API_URL", "http://localhost:8000")
 
-st.set_page_config(page_title="HR Command Center", layout="wide")
+st.set_page_config(page_title="Nukhba | HR Command", page_icon="💎", layout="wide")
 inject_premium_css()
 
 if 'user' not in st.session_state or st.session_state['user'] is None or st.session_state['user']['role'] != 'HR':
@@ -16,6 +16,7 @@ if 'user' not in st.session_state or st.session_state['user'] is None or st.sess
     
 user = st.session_state['user']
 
+st.markdown("<h1 class='nukhba-logo' style='font-size: 2.5rem;'>NUKHBA</h1>", unsafe_allow_html=True)
 st.title("💼 HR Command Center")
 
 tab1, tab2 = st.tabs(["➕ Post a Job", "🔍 AI Application Review"])

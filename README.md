@@ -1,4 +1,4 @@
-# TalentSpark AI - Intelligent Recruitment System ✨
+# NUKHBA - Elite Talent Intelligence Platform 💎
 
 TalentSpark AI is an end-to-end recruitment platform that leverages FastAPI (backend) and Streamlit (frontend) to streamline hiring with AI-powered candidate screening and a premium user experience.
 
