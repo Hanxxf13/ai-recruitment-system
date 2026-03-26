@@ -8,18 +8,32 @@ def inject_premium_css():
     <style>
     /* CSS Variables for a cohesive theme */
     :root {
-        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        --secondary-gradient: linear-gradient(135deg, #2af598 0%, #009efd 100%);
+        --primary-gradient: linear-gradient(135deg, #818cf8 0%, #c084fc 100%);
+        --secondary-gradient: linear-gradient(135deg, #fb7185 0%, #c084fc 100%);
         --glass-bg: rgba(255, 255, 255, 0.05);
         --glass-border: rgba(255, 255, 255, 0.1);
-        --text-color: #f8f9fa;
+        --text-color: #f8fafc;
     }
 
-    /* Modern font and background */
-    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap');
+    /* Stylish font import */
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap');
     
     .stApp {
         font-family: 'Outfit', sans-serif;
+        background: radial-gradient(circle at top right, #1e1b4b, #0f172a);
+    }
+
+    .nukhba-logo {
+        font-family: 'Outfit', sans-serif;
+        font-size: 3.5rem;
+        font-weight: 800;
+        letter-spacing: -1px;
+        background: linear-gradient(to right, #818cf8, #fb7185);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin: 0;
+        padding: 0;
+        line-height: 1.1;
     }
 
     /* Glassmorphism containers */
