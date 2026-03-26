@@ -38,12 +38,21 @@ def register_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Email already registered")
     
     new_user = models.User(
-        name=user.name, email=user.email, password=user.password, role=user.role
+        name=user.name, email=user.email, password=user.password, role=user.role,
+        phone=user.phone, country=user.country
     )
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
     return new_user
+
+@app.post("/users/request-otp")
+def request_otp(email: str, phone: str):
+    # Simulated OTP generation for demo
+    import random
+    otp = str(random.randint(1000, 9999))
+    print(f"DEBUG: OTP for {email} / {phone} is {otp}")
+    return {"message": "OTP sent!", "otp": otp} # Returning OTP for demo visibility
 
 @app.post("/users/login", response_model=schemas.UserResponse)
 def login_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
@@ -132,7 +141,7 @@ def seed_database(db: Session = Depends(get_db)):
     # Create HR User
     hr = db.query(models.User).filter(models.User.email == "hr@example.com").first()
     if not hr:
-        hr = models.User(name="HR Manager", email="hr@example.com", password="password123", role="HR")
+        hr = models.User(name="HR Manager", email="hr@example.com", password="password123", role="HR", country="United Arab Emirates 🇦🇪", phone="+971 50 123 4567")
         db.add(hr)
         db.commit()
         db.refresh(hr)
@@ -140,7 +149,7 @@ def seed_database(db: Session = Depends(get_db)):
     # Create Candidate
     candidate = db.query(models.User).filter(models.User.email == "candidate@example.com").first()
     if not candidate:
-        candidate = models.User(name="John Doe", email="candidate@example.com", password="password123", role="Candidate")
+        candidate = models.User(name="John Doe", email="candidate@example.com", password="password123", role="Candidate", country="United Arab Emirates 🇦🇪", phone="+971 50 765 4321")
         db.add(candidate)
         db.commit()
         db.refresh(candidate)
