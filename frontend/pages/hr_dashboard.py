@@ -18,6 +18,10 @@ user = st.session_state['user']
 
 st.markdown("<h1 class='nukhba-logo' style='font-size: 2.5rem;'>NUKHBA</h1>", unsafe_allow_html=True)
 st.title("💼 HR Command Center")
+st.sidebar.divider()
+if st.sidebar.button("📦 Download System Backup", help="Download a zip of all recruitment data, users, and resumes."):
+    backup_url = f"{API_URL}/system/download-data"
+    st.sidebar.markdown(f"[Click here to download your backup]({backup_url})")
 
 tab1, tab2 = st.tabs(["➕ Post a Job", "🔍 AI Application Review"])
 
