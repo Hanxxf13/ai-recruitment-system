@@ -33,12 +33,20 @@ python -m uvicorn backend.main:app --port 8000 --reload
 streamlit run frontend/app.py
 ```
 
-## 🌍 Deployment
-To deploy this project:
-1. **GitHub**: Push this repository to GitHub.
-2. **Backend**: Host the `backend` folder on **Railway.app** or **Render.com**.
-3. **Frontend**: Point **Streamlit Community Cloud** to your `frontend/app.py`.
-4. **Environment Variables**: Update `API_URL` in the frontend files to point to your live backend URL.
+## 🌍 Deployment (Railway / Render)
+
+I have optimized the project for cloud hosting:
+1. **Dynamic API URL**: The frontend now looks for an `API_URL` environment variable.
+2. **Procfile**: Added a `Procfile` to tell hosting services how to run your apps.
+
+### Hosting the Backend (Railway/Render)
+- **Repo**: Use your GitHub repository.
+- **Build Command**: `pip install -r backend/requirements.txt`
+- **Start Command**: `python -m uvicorn backend.main:app --host 0.0.0.0 --port $PORT`
+
+### Hosting the Frontend (Streamlit Cloud)
+- **App File**: `frontend/app.py`
+- **Environment Variable**: Add `API_URL` set to your live Backend URL.
 
 ---
 Created with ✨ by TalentSpark Team.
