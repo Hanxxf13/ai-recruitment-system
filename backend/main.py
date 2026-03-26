@@ -1,7 +1,12 @@
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from typing import List
+import os
+import json
+import shutil
+from datetime import datetime
 
 from . import models
 from . import schemas
@@ -130,7 +135,7 @@ def apply_job(app_data: schemas.ApplicationCreate, candidate_id: int, db: Sessio
     # Persistent Backup (TXT)
     resume_filename = f"backend/data/resumes/app_{new_app.id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
     with open(resume_filename, "w", encoding="utf-8") as f:
-        f.write(f"Candidate ID: {candidate_id}\nJob ID: {application.job_id}\nScore: {score}\n\n{application.resume_text}")
+        f.write(f"Candidate ID: {candidate_id}\nJob ID: {new_app.job_id}\nScore: {new_app.ai_score}\n\n{new_app.resume_text}")
         
     return new_app
 
