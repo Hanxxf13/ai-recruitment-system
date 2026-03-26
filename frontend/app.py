@@ -25,40 +25,48 @@ if 'user' not in st.session_state:
 if st.session_state['user'] is None:
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        st.markdown("<div class='job-card'>", unsafe_allow_html=True)
-        tab1, tab2 = st.tabs(["🔐 Login", "📝 Register"])
+        # Unified Login Card
+        st.markdown("<div style='background: rgba(255, 255, 255, 0.05); border-radius: 15px; padding: 25px; backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);'>", unsafe_allow_html=True)
+        tab1, tab2 = st.tabs(["🔐 Sign In", "📝 Create Account"])
         
         with tab1:
-            email = st.text_input("Email", placeholder="your@email.com")
-            password = st.text_input("Password", type="password")
-            if st.button("Sign In", use_container_width=True):
+            st.markdown("#### Welcome Back")
+            email = st.text_input("Email", placeholder="hr@example.com", key="login_email")
+            password = st.text_input("Password", type="password", key="login_pass")
+            if st.button("Access Dashboard", use_container_width=True):
                 try:
                     resp = requests.post(f"{API_URL}/users/login", json={
                         "name": "", "email": email, "password": password, "role": ""
-                    })
+                    }, timeout=5)
                     if resp.status_code == 200:
                         st.session_state['user'] = resp.json()
-                        st.success(f"Hello, {st.session_state['user']['name']}!")
+                        st.success(f"Log-in successful! Redirecting...")
                         st.rerun()
                     else:
-                        st.error("Invalid credentials.")
-                except:
-                    st.error("Backend offline. Please start the server.")
+                        st.error("Invalid credentials. Try: hr@example.com / password123")
+                except requests.exceptions.ConnectionError:
+                    st.error("⚠️ Backend is offline. Please start your FastAPI server.")
+                except Exception as e:
+                    st.error(f"Error: {str(e)}")
                     
         with tab2:
-            name_reg = st.text_input("Name", placeholder="Full Name")
-            email_reg = st.text_input("Email", placeholder="email@address.com")
-            pass_reg = st.text_input("Create Password", type="password")
-            role_reg = st.selectbox("I am a...", ["Candidate", "HR", "Admin"])
+            st.markdown("#### Join TalentSpark")
+            name_reg = st.text_input("Full Name", placeholder="Jane Doe")
+            email_reg = st.text_input("Email", placeholder="jane@example.com")
+            pass_reg = st.text_input("Password", type="password", key="reg_pass")
+            role_reg = st.selectbox("Account Type", ["Candidate", "HR", "Admin"])
             
-            if st.button("Create Account", use_container_width=True):
-                resp = requests.post(f"{API_URL}/users/register", json={
-                    "name": name_reg, "email": email_reg, "password": pass_reg, "role": role_reg
-                })
-                if resp.status_code == 200:
-                    st.success("Account created! Please login.")
-                else:
-                    st.error(resp.json().get("detail", "Error"))
+            if st.button("Start My Journey", use_container_width=True):
+                try:
+                    resp = requests.post(f"{API_URL}/users/register", json={
+                        "name": name_reg, "email": email_reg, "password": pass_reg, "role": role_reg
+                    }, timeout=5)
+                    if resp.status_code == 200:
+                        st.success("✨ Welcome aboard! You can now log in.")
+                    else:
+                        st.error(resp.json().get("detail", "Registration failed."))
+                except:
+                    st.error("⚠️ Backend connection failed.")
         st.markdown("</div>", unsafe_allow_html=True)
 else:
     user = st.session_state['user']
