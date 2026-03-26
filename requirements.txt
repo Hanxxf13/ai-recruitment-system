@@ -8,4 +8,6 @@ spacy
 streamlit
 requests
 pandas
+twilio
+pydantic-settings
 # spacy model should be downloaded via command: python -m spacy download en_core_web_sm

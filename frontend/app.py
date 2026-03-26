@@ -105,7 +105,9 @@ if st.session_state['user'] is None:
                         try:
                             resp = requests.post(f"{API_URL}/users/request-otp", params={"email": email_reg, "phone": phone_no})
                             if resp.status_code == 200:
+                                import time
                                 st.session_state['sent_otp'] = resp.json()['otp']
+                                st.session_state['otp_sent_at'] = time.time()
                                 st.session_state['reg_data'] = {
                                     "name": name, "email": email_reg, "password": pass_reg, 
                                     "role": role, "country": f"{country_name} {c_code}", "phone": phone_no
@@ -118,24 +120,121 @@ if st.session_state['user'] is None:
                         st.warning("Please fill email and phone.")
             
             else:
-                st.info(f"✨ OTP sent to {st.session_state['reg_data']['phone']} (Demo OTP: **{st.session_state['sent_otp']}**)")
-                otp_input = st.text_input("Enter 4-digit OTP", placeholder="0000")
-                if st.button("Verify & Complete Registration", use_container_width=True):
-                    if otp_input == st.session_state['sent_otp']:
+                import time
+                OTP_EXPIRY = 60  # 1 minute
+                elapsed = time.time() - st.session_state.get('otp_sent_at', time.time())
+                remaining = max(0, int(OTP_EXPIRY - elapsed))
+                expired = remaining == 0
+
+                phone_display = st.session_state['reg_data']['phone']
+
+                # Live HTML/JS countdown timer
+                import streamlit.components.v1 as components
+                components.html(f"""
+                <style>
+                  .otp-banner {{
+                    background: linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%);
+                    border: 1px solid #B8860B;
+                    border-radius: 12px;
+                    padding: 16px 22px;
+                    display: flex;
+                    align-items: center;
+                    gap: 16px;
+                    font-family: 'Segoe UI', sans-serif;
+                  }}
+                  .otp-icon {{ font-size: 2rem; }}
+                  .otp-text {{ color: #e0e0e0; font-size: 0.95rem; }}
+                  .otp-phone {{ color: #B8860B; font-weight: 700; }}
+                  #otp-timer {{
+                    font-size: 1.5rem;
+                    font-weight: 900;
+                    color: #B8860B;
+                    font-variant-numeric: tabular-nums;
+                    min-width: 48px;
+                    text-align: center;
+                  }}
+                  #otp-timer.expired {{ color: #e53e3e; }}
+                  .expired-banner {{
+                    background: linear-gradient(135deg, #2d0000 0%, #1a0000 100%);
+                    border: 1px solid #e53e3e;
+                    border-radius: 12px;
+                    padding: 14px 22px;
+                    color: #ff6b6b;
+                    font-family: 'Segoe UI', sans-serif;
+                    font-size: 0.95rem;
+                    display: none;
+                    align-items: center;
+                    gap: 10px;
+                  }}
+                </style>
+                <div class="otp-banner" id="active-banner">
+                  <div class="otp-icon">📲</div>
+                  <div class="otp-text">
+                    OTP sent to <span class="otp-phone">{phone_display}</span><br>
+                    <small style="color:#888">Expires in</small>
+                  </div>
+                  <div id="otp-timer">{remaining}s</div>
+                </div>
+                <div class="expired-banner" id="expired-banner">
+                  ⏰ <strong>OTP Expired!</strong>&nbsp; Click <em>Resend OTP</em> below to get a fresh code.
+                </div>
+                <script>
+                  var rem = {remaining};
+                  var timerEl = document.getElementById('otp-timer');
+                  var activeBanner = document.getElementById('active-banner');
+                  var expiredBanner = document.getElementById('expired-banner');
+                  var interval = setInterval(function() {{
+                    rem--;
+                    if (rem <= 0) {{
+                      clearInterval(interval);
+                      activeBanner.style.display = 'none';
+                      expiredBanner.style.display = 'flex';
+                    }} else {{
+                      timerEl.textContent = rem + 's';
+                      if (rem <= 10) timerEl.classList.add('expired');
+                    }}
+                  }}, 1000);
+                </script>
+                """, height=80)
+
+                otp_input = st.text_input("Enter 4-digit OTP", placeholder="0000", disabled=expired)
+
+                if not expired:
+                    if st.button("Verify & Complete Registration", use_container_width=True):
+                        if otp_input == st.session_state['sent_otp']:
+                            try:
+                                resp = requests.post(f"{API_URL}/users/register", json=st.session_state['reg_data'])
+                                if resp.status_code == 200:
+                                    st.success("🎉 Registration Elite Complete! Please Sign In.")
+                                    st.session_state['reg_step'] = 1
+                                    st.session_state.pop('sent_otp', None)
+                                    st.session_state.pop('otp_sent_at', None)
+                                    st.rerun()
+                                else:
+                                    st.error(resp.json().get("detail", "Error"))
+                            except:
+                                st.error("Registration failed.")
+                        else:
+                            st.error("❌ Invalid OTP. Please double-check or request a new one.")
+                
+                col_resend, col_back = st.columns(2)
+                with col_resend:
+                    if st.button("🔄 Resend OTP", use_container_width=True, disabled=not expired):
                         try:
-                            resp = requests.post(f"{API_URL}/users/register", json=st.session_state['reg_data'])
+                            reg_data = st.session_state['reg_data']
+                            resp = requests.post(f"{API_URL}/users/request-otp", params={"email": reg_data['email'], "phone": reg_data['phone']})
                             if resp.status_code == 200:
-                                st.success("🎉 Registration Elite Complete! Please Sign In.")
-                                st.session_state['reg_step'] = 1
-                            else:
-                                st.error(resp.json().get("detail", "Error"))
+                                st.session_state['sent_otp'] = resp.json()['otp']
+                                st.session_state['otp_sent_at'] = time.time()
+                                st.rerun()
                         except:
-                            st.error("Registration failed.")
-                    else:
-                        st.error("Invalid OTP. Try again.")
-                if st.button("Go Back", key="back_btn"):
-                    st.session_state['reg_step'] = 1
-                    st.rerun()
+                            st.error("Failed to resend OTP.")
+                with col_back:
+                    if st.button("← Go Back", use_container_width=True, key="back_btn"):
+                        st.session_state['reg_step'] = 1
+                        st.session_state.pop('sent_otp', None)
+                        st.session_state.pop('otp_sent_at', None)
+                        st.rerun()
 
         st.markdown("<p style='text-align: center; color: #999; margin-top: 40px; font-size: 0.8rem;'>Need help? Contact support</p>", unsafe_allow_html=True)
         st.markdown("</div>", unsafe_allow_html=True)
