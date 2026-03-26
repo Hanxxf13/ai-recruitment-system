@@ -103,14 +103,42 @@ else:
         st.rerun()
         
     st.markdown(f"""
-        <div style='text-align: center; margin-top: 50px;'>
-            <h2>Welcome to Nukhba, {user['name']}!</h2>
-            <p>Your elite AI-powered recruitment journey starts here.</p>
+        <div style='text-align: center; margin-top: 50px; padding: 40px; background: rgba(255,255,255,0.03); border-radius: 25px;'>
+            <h1 style='font-weight: 800; font-size: 3rem;'>Welcome to Nukhba Elite, {user['name']}!</h1>
+            <p style='font-size: 1.3rem; opacity: 0.7;'>The future of AI-powered talent intelligence is now in your hands.</p>
         </div>
     """, unsafe_allow_html=True)
     
+    st.markdown("---")
+    
+    m1, m2, m3 = st.columns(3)
+    with m1:
+        st.metric("Total Elite Jobs", "154", "12 new")
+    with m2:
+        st.metric("Top Candidates", "2.8k", "24 screened")
+    with m3:
+        st.metric("AI Accuracy", "98.4%", "↑ 1.2%")
+
+    st.markdown("<br>", unsafe_allow_html=True)
+    
+    st.markdown("### 🎯 Quick Navigation")
     c1, c2 = st.columns(2)
     with c1:
-        st.info("👈 **HR Managers**: Use the sidebar to access 'HR Dashboard' to post jobs and review AI-screened candidates.")
+        st.markdown("""
+        <div class='elite-card'>
+            <h4>🏢 For HR Managers</h4>
+            <p>Access your dashboard to post elite roles and review AI screenings.</p>
+        </div>
+        """, unsafe_allow_html=True)
+        if st.button("Open Recruit Master Dashboard", key="hr_btn"):
+            st.switch_page("pages/hr_dashboard.py")
+            
     with c2:
-        st.info("👈 **Candidates**: Use the sidebar to access 'Candidate Dashboard' to find jobs and track your applications.")
+        st.markdown("""
+        <div class='elite-card'>
+            <h4>🚀 For Top Talent</h4>
+            <p>Explore opportunities matched specifically to your unique skill profile.</p>
+        </div>
+        """, unsafe_allow_html=True)
+        if st.button("Open Elite Career Portal", key="cand_btn"):
+            st.switch_page("pages/candidate_dashboard.py")
