@@ -3,199 +3,311 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Nukhba Elite — Career Portal</title>
+  <title>Nukhba — Career Portal</title>
   <link rel="stylesheet" href="/web/css/style.css" />
   <style>
-    body { display: flex; flex-direction: column; min-height: 100vh; }
-    .main { display: flex; flex: 1; }
-    .sidebar {
-      width: 230px;
-      background: #0a0a0a;
-      border-right: 1px solid var(--border);
-      padding: 28px 20px;
-      display: flex; flex-direction: column; gap: 8px;
-      position: sticky; top: 64px;
-      height: calc(100vh - 64px);
+    .section { animation: sectionFade 0.4s ease both; }
+    @keyframes sectionFade {
+      from { opacity:0; transform: translateY(12px); }
+      to   { opacity:1; transform: translateY(0); }
     }
-    .sidebar-label { font-size: .68rem; letter-spacing: 2px; color: var(--text-dim); text-transform: uppercase; margin: 16px 0 6px; }
-    .sidebar-btn {
-      display: flex; align-items: center; gap: 10px;
-      padding: 11px 14px; border-radius: 10px;
-      cursor: pointer; font-size: .9rem; font-weight: 600; color: var(--text);
-      background: transparent; border: none; width: 100%; text-align: left; transition: all .2s;
-    }
-    .sidebar-btn:hover, .sidebar-btn.active { background: var(--gold-glow); color: var(--gold); }
-    .content { flex: 1; padding: 36px; overflow-y: auto; }
-    .section { display: none; }
-    .section.active { display: block; }
-
-    /* ── JOB CARD ── */
     .job-card {
       background: var(--card);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 24px 28px;
-      margin-bottom: 16px;
-      transition: border-color .3s, transform .2s;
+      padding: 24px;
+      transition: all 0.25s;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
     }
-    .job-card:hover { border-color: var(--gold); transform: translateY(-2px); }
-    .job-card h3 { font-size: 1.1rem; font-weight: 800; margin-bottom: 4px; }
-    .job-card .elite-tag { color: var(--gold); font-size: .75rem; font-weight: 700; letter-spacing: 1px; margin-bottom: 10px; }
-    .job-card p { color: var(--text-dim); font-size: .9rem; line-height: 1.5; }
-
-    details summary { cursor: pointer; color: var(--gold); font-size: .88rem; font-weight: 600; margin-top: 14px; }
-    details .apply-box { margin-top: 16px; }
-    textarea.resume-input {
-      background: #1a1a1a;
-      border: 1px solid #333;
-      border-radius: 10px;
-      color: var(--text);
-      font-family: 'Inter', sans-serif;
-      font-size: .88rem;
-      padding: 12px;
-      width: 100%;
-      resize: vertical;
+    .job-card:hover {
+      border-color: rgba(201,168,76,0.5);
+      box-shadow: 0 0 20px var(--gold-glow);
+      transform: translateY(-2px);
     }
-
-    /* ── APP STATUS ── */
-    .app-card {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 16px 20px;
+    .job-title { font-size:1.05rem; font-weight:700; margin-bottom:6px; }
+    .job-desc  { font-size:.85rem; color:var(--text-dim); line-height:1.6; margin-bottom:12px; flex:1; }
+    .job-reqs  { font-size:.78rem; color:var(--gold-dark); font-weight:600; margin-bottom:16px; }
+    .modal-overlay {
+      position:fixed; inset:0;
+      background:rgba(0,0,0,0.8);
+      z-index:500;
+      display:flex; align-items:center; justify-content:center;
+      padding:20px;
+    }
+    .modal {
       background: var(--card);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      margin-bottom: 12px;
+      padding: 36px;
+      width:100%; max-width:540px;
+      position:relative;
+      animation: sectionFade 0.3s ease both;
     }
+    .modal-close {
+      position:absolute; top:16px; right:16px;
+      background:none; border:none; color:var(--text-dim);
+      font-size:1.3rem; cursor:pointer;
+    }
+    .modal-close:hover { color:var(--text); }
+    .modal-title {
+      font-family:'Playfair Display',serif;
+      font-size:1.3rem; font-weight:700;
+      color:var(--gold); margin-bottom:6px;
+    }
+    .modal-subtitle { font-size:.85rem; color:var(--text-dim); margin-bottom:22px; }
+    .ai-result {
+      background: rgba(201,168,76,0.06);
+      border: 1px solid var(--border);
+      border-radius:var(--radius-sm);
+      padding:24px;
+      text-align:center;
+      margin-top:20px;
+    }
+    .ai-result .score-big {
+      font-size:3rem; font-weight:900;
+      color:var(--gold); line-height:1;
+    }
+    .ai-result .score-label {
+      font-size:.78rem; color:var(--text-muted);
+      text-transform:uppercase; letter-spacing:1px;
+      margin-bottom:12px;
+    }
+    .ai-result .feedback-text {
+      font-size:.88rem; color:var(--text-dim);
+      line-height:1.6; text-align:left;
+    }
+    .app-status-row {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:16px 18px;
+      border-bottom:1px solid rgba(255,255,255,0.04);
+    }
+    .app-status-row:last-child { border-bottom:none; }
+    .app-status-row:hover { background:rgba(255,255,255,0.02); }
   </style>
 </head>
 <body>
 
-<!-- TOPBAR -->
+<!-- ════════════ TOPBAR ════════════ -->
 <nav class="topbar">
-  <div>
-    <div class="topbar-logo">نخبة</div>
-    <div class="topbar-sub">ELITE CAREER PORTAL</div>
+  <div class="topbar-brand">
+    <span class="topbar-logo">نخبة</span>
+    <span class="topbar-sub">Career Portal</span>
   </div>
   <div class="topbar-right" id="topbar-user"></div>
 </nav>
 
-<div class="main">
+<!-- ════════════ SHELL ════════════ -->
+<div class="page-shell">
+
+  <!-- Sidebar -->
   <aside class="sidebar">
-    <div class="sidebar-label">Navigation</div>
-    <button class="sidebar-btn active" onclick="showSection('explore', event)">🚀 &nbsp;Explore Roles</button>
-    <button class="sidebar-btn" onclick="showSection('tracker', event)">📋 &nbsp;My Applications</button>
-    <div class="sidebar-label">Account</div>
-    <button class="sidebar-btn" style="color:#fc8181" onclick="logout()">⏻ &nbsp;Logout</button>
+    <div class="sidebar-label">Career</div>
+    <div class="sidebar-item active" onclick="showSection('discover')">
+      <span class="icon">🔍</span> Discover Jobs
+    </div>
+    <div class="sidebar-item" onclick="showSection('applications')">
+      <span class="icon">📋</span> My Applications
+    </div>
+    <div class="sidebar-label" style="margin-top:12px">Account</div>
+    <div class="sidebar-item" onclick="showSection('profile')">
+      <span class="icon">👤</span> My Profile
+    </div>
   </aside>
 
-  <div class="content">
+  <main class="main-content">
 
-    <!-- ── METRICS ── -->
-    <div class="metrics-grid" style="grid-template-columns:repeat(3,1fr)">
-      <div class="metric-card">
-        <div class="metric-value" id="m-jobs">—</div>
-        <div class="metric-label">Open Positions</div>
+    <!-- ── DISCOVER ── -->
+    <section id="sec-discover" class="section">
+      <div class="page-title">Find Your Elite Opportunity</div>
+      <div class="page-subtitle">AI-matched positions curated for top talent.</div>
+
+      <div id="jobs-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:18px;margin-top:8px"></div>
+    </section>
+
+    <!-- ── APPLICATIONS ── -->
+    <section id="sec-applications" class="section hidden">
+      <div class="page-title">My Applications</div>
+      <div class="page-subtitle">Track your submission status and AI evaluation scores.</div>
+
+      <div class="card" style="padding:0;overflow:hidden;margin-top:8px">
+        <div id="apps-list"></div>
       </div>
-      <div class="metric-card">
-        <div class="metric-value" id="m-apps">—</div>
-        <div class="metric-label">My Applications</div>
+    </section>
+
+    <!-- ── PROFILE ── -->
+    <section id="sec-profile" class="section hidden">
+      <div class="page-title">My Profile</div>
+      <div class="page-subtitle">Your elite membership details.</div>
+
+      <div class="card" style="max-width:500px;margin-top:8px" id="profile-card">
+        <div style="display:flex;align-items:center;gap:20px;margin-bottom:24px">
+          <div class="avatar" style="width:64px;height:64px;font-size:1.6rem" id="profile-avatar">?</div>
+          <div>
+            <div style="font-size:1.2rem;font-weight:700" id="profile-name">—</div>
+            <div style="font-size:.82rem;color:var(--text-dim)" id="profile-email">—</div>
+            <span class="badge badge-gold" style="margin-top:4px" id="profile-role">—</span>
+          </div>
+        </div>
+        <div class="card" style="background:var(--card2);border-color:var(--border2)">
+          <div style="font-size:.75rem;text-transform:uppercase;letter-spacing:1px;color:var(--gold);margin-bottom:12px">Membership</div>
+          <p style="font-size:.88rem;color:var(--text-dim);line-height:1.6">
+            You are a valued member of the Nukhba Elite talent network. Apply to exclusive positions and track your AI-powered application journey.
+          </p>
+        </div>
       </div>
-      <div class="metric-card">
-        <div class="metric-value">AI</div>
-        <div class="metric-label">Screened Instantly</div>
-        <div class="metric-change">By Nukhba Engine</div>
-      </div>
-    </div>
+    </section>
 
-    <!-- ── EXPLORE ROLES ── -->
-    <div class="section active" id="section-explore">
-      <h2 style="margin-bottom:24px">🚀 &nbsp;Open Elite Positions</h2>
-      <div id="jobs-list"><p class="text-dim">Loading positions...</p></div>
-    </div>
+  </main>
+</div>
 
-    <!-- ── MY APPLICATIONS ── -->
-    <div class="section" id="section-tracker">
-      <h2 style="margin-bottom:24px">📋 &nbsp;My Application Tracker</h2>
-      <div id="apps-list"><p class="text-dim">Loading your applications...</p></div>
+<!-- ════ APPLY MODAL ════ -->
+<div class="modal-overlay hidden" id="apply-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-title" id="apply-job-title">Apply for Position</div>
+    <div class="modal-subtitle">Paste or type your resume/experience below. Our AI will evaluate your fit instantly.</div>
+    <div class="form-group">
+      <label>Resume / Experience Summary</label>
+      <textarea id="resume-text" rows="8" placeholder="Paste your resume here, or describe your skills and experience in detail…"></textarea>
     </div>
-
+    <div id="apply-result" class="hidden"></div>
+    <button class="btn btn-primary" id="btn-apply" onclick="submitApplication()">🚀 Submit & Get AI Score</button>
   </div>
 </div>
 
 <div id="toast-container"></div>
 <script src="/web/js/app.js"></script>
 <script>
-  const user = requireAuth('Candidate');
-  if (user) renderTopbar();
+  const user = requireAuth();
+  if (user) { renderTopbar(); loadPortal(); renderProfile(); }
 
-  function showSection(name, e) {
-    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-    document.querySelectorAll('.sidebar-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById(`section-${name}`).classList.add('active');
-    if (e) e.target.classList.add('active');
-    if (name === 'tracker') loadMyApps();
-  }
+  let allJobs = [];
+  let myApps  = [];
+  let currentJob = null;
 
-  // ── Load Open Jobs ──
-  async function loadJobs() {
-    const list = document.getElementById('jobs-list');
+  async function loadPortal() {
     try {
-      const jobs = await api('GET', '/jobs');
-      const open = jobs.filter(j => j.status === 'Open');
-      document.getElementById('m-jobs').textContent = open.length;
-      if (!open.length) { list.innerHTML = '<p class="text-dim">No open positions right now. Check back soon!</p>'; return; }
-      list.innerHTML = open.map(j => `
-        <div class="job-card">
-          <h3>${j.title}</h3>
-          <div class="elite-tag">ELITE MATCH ✦</div>
-          <p>${j.description.substring(0, 180)}...</p>
-          <details>
-            <summary>Requirements &amp; Apply</summary>
-            <div class="apply-box">
-              <p style="color:var(--text);margin-bottom:12px"><strong>Requirements:</strong> ${j.requirements}</p>
-              <label style="font-size:.8rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px">Your Resume / Professional Summary</label>
-              <textarea class="resume-input" id="res-${j.id}" rows="5" placeholder="Paste your professional summary here for AI screening..."></textarea>
-              <div style="height:10px"></div>
-              <button class="btn btn-primary" onclick="applyJob(${j.id}, this)">Submit Application 🚀</button>
-            </div>
-          </details>
-        </div>`).join('');
-    } catch(e) { list.innerHTML = `<p style="color:var(--danger)">Error: ${e.message}</p>`; }
+      allJobs = await api('GET', '/jobs');
+      myApps  = await api('GET', `/applications/candidate/${user.id}`);
+    } catch(e) { showToast('Could not reach backend', 'error'); }
+    renderJobs();
+    renderMyApps();
   }
-  loadJobs();
 
-  async function applyJob(jobId, btn) {
-    const resume = document.getElementById(`res-${jobId}`).value.trim();
-    if (resume.length < 50) return showToast('Please provide a more detailed professional summary (min 50 chars)', 'error');
+  function renderJobs() {
+    const grid = document.getElementById('jobs-grid');
+    const appliedJobIds = new Set(myApps.map(a => a.job_id));
+    if (!allJobs.length) {
+      grid.innerHTML = '<div class="job-card" style="grid-column:1/-1;text-align:center;padding:60px;color:var(--text-muted)"><div style="font-size:3rem">🔍</div><p>No open positions right now. Check back soon!</p></div>';
+      return;
+    }
+    grid.innerHTML = allJobs.map(j => {
+      const applied = appliedJobIds.has(j.id);
+      return `
+        <div class="job-card">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px">
+            <div class="job-title">${j.title}</div>
+            <span class="badge ${j.status==='Open'?'badge-green':'badge-dim'} " style="white-space:nowrap">${j.status}</span>
+          </div>
+          <p class="job-desc">${j.description}</p>
+          <div class="job-reqs">🔑 ${j.requirements}</div>
+          ${applied
+            ? `<button class="btn btn-ghost" disabled style="cursor:default;opacity:0.5">✓ Already Applied</button>`
+            : `<button class="btn btn-primary" onclick="openApply(${JSON.stringify(j)})">Apply Now →</button>`
+          }
+        </div>`;
+    }).join('');
+  }
+
+  function renderMyApps() {
+    const list = document.getElementById('apps-list');
+    if (!myApps.length) {
+      list.innerHTML = `<div style="text-align:center;padding:60px;color:var(--text-muted)">
+        <div style="font-size:3rem">📋</div>
+        <p style="margin-top:12px">You haven't applied to any positions yet.</p>
+        <button class="btn btn-primary" style="width:auto;margin-top:20px;padding:10px 24px" onclick="showSection('discover')">Browse Jobs →</button>
+      </div>`;
+      return;
+    }
+    const jobMap = Object.fromEntries(allJobs.map(j => [j.id, j]));
+    list.innerHTML = myApps.map(a => {
+      const job = jobMap[a.job_id] || {};
+      const score = a.ai_score;
+      const scoreColor = score>=75?'var(--success)':score>=50?'var(--gold)':'var(--danger)';
+      return `<div class="app-status-row">
+        <div>
+          <div style="font-weight:600;font-size:.92rem">${job.title||'Position'}</div>
+          <div style="font-size:.78rem;color:var(--text-dim);margin-top:3px">${job.requirements||''}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:16px">
+          <div style="text-align:center">
+            <div style="font-size:1.2rem;font-weight:900;color:${scoreColor}">${score?.toFixed(0)||'—'}%</div>
+            <div style="font-size:.7rem;color:var(--text-muted)">AI Score</div>
+          </div>
+          <span class="badge badge-dim">${a.status}</span>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  function renderProfile() {
+    if (!user) return;
+    document.getElementById('profile-avatar').textContent = user.name.charAt(0).toUpperCase();
+    document.getElementById('profile-name').textContent   = user.name;
+    document.getElementById('profile-email').textContent  = user.email;
+    document.getElementById('profile-role').textContent   = user.role;
+  }
+
+  function openApply(job) {
+    currentJob = job;
+    document.getElementById('apply-job-title').textContent = job.title;
+    document.getElementById('resume-text').value = '';
+    document.getElementById('apply-result').classList.add('hidden');
+    document.getElementById('apply-modal').classList.remove('hidden');
+  }
+  function closeModal() { document.getElementById('apply-modal').classList.add('hidden'); }
+  document.getElementById('apply-modal').addEventListener('click', e => {
+    if (e.target === document.getElementById('apply-modal')) closeModal();
+  });
+
+  async function submitApplication() {
+    const btn    = document.getElementById('btn-apply');
+    const resume = document.getElementById('resume-text').value.trim();
+    if (!resume) return showToast('Please enter your resume or experience summary','error');
     setLoading(btn, true);
     try {
-      await api('POST', `/applications?candidate_id=${user.id}`, { job_id: jobId, resume_text: resume });
-      showToast('Application submitted & AI-screened! 🎉', 'success');
-      loadMyApps();
-    } catch(e) { showToast(e.message, 'error'); }
-    finally { setLoading(btn, false); }
+      const result = await api('POST', `/applications?candidate_id=${user.id}`,
+        { job_id: currentJob.id, resume_text: resume });
+      const score = result.ai_score;
+      const color = score>=75?'#68d391':score>=50?'var(--gold)':'#fc8181';
+      document.getElementById('apply-result').innerHTML = `
+        <div class="ai-result">
+          <div class="score-big" style="color:${color}">${score?.toFixed(0)||'—'}%</div>
+          <div class="score-label">Your AI Fit Score</div>
+          <p class="feedback-text">${result.ai_feedback||'No feedback available.'}</p>
+        </div>`;
+      document.getElementById('apply-result').classList.remove('hidden');
+      btn.innerHTML = '✓ Application Submitted';
+      btn.disabled = true;
+      showToast('Application submitted and scored by AI! 🤖', 'success');
+      await loadPortal();
+    } catch(e) {
+      showToast(e.message||'Submission failed','error');
+      setLoading(btn, false);
+    }
   }
 
-  async function loadMyApps() {
-    const list = document.getElementById('apps-list');
-    list.innerHTML = '<p class="text-dim">Loading...</p>';
-    try {
-      const apps = await api('GET', `/applications/candidate/${user.id}`);
-      document.getElementById('m-apps').textContent = apps.length;
-      if (!apps.length) { list.innerHTML = '<p class="text-dim">You haven\'t applied to any roles yet. Explore positions to get started!</p>'; return; }
-      const badge = s => ({ Screened:'badge-blue', Interviewing:'badge-gold', Hired:'badge-green', Rejected:'badge-red' }[s] || 'badge-blue');
-      list.innerHTML = apps.map(a => `
-        <div class="app-card">
-          <div>
-            <strong>Job #${a.job_id}</strong>
-            <div style="font-size:.8rem;color:var(--text-dim);margin-top:4px">Applied ${new Date(a.created_at).toLocaleDateString()}</div>
-          </div>
-          <div style="text-align:right">
-            <span class="badge ${badge(a.status)}">${a.status}</span>
-            <div style="font-size:.8rem;color:var(--gold);margin-top:6px">AI Score: ${a.ai_score}%</div>
-          </div>
-        </div>`).join('');
-    } catch(e) { list.innerHTML = `<p style="color:var(--danger)">Error: ${e.message}</p>`; }
+  function showSection(name) {
+    ['discover','applications','profile'].forEach(s => {
+      document.getElementById(`sec-${s}`).classList.add('hidden');
+    });
+    document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
+    document.getElementById(`sec-${name}`).classList.remove('hidden');
+    const map = {discover:0, applications:1, profile:2};
+    const items = document.querySelectorAll('.sidebar-item');
+    if (map[name] !== undefined) items[map[name]]?.classList.add('active');
   }
 </script>
 </body>

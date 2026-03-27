@@ -1,36 +1,33 @@
 @echo off
 echo ===========================================
-echo AI Recruitment Platform Launch Script
+echo  NUKHBA ELITE — Recruitment Platform
 echo ===========================================
 
-REM Setup virtual environments
-echo Creating Python Virtual Environment (if not exists)...
+REM Setup virtual environment
 if not exist .venv (
+    echo Creating Python virtual environment...
     python -m venv .venv
 )
 call .venv\Scripts\activate.bat
 
-echo Installing Backend Dependencies...
-cd backend
-pip install -r requirements.txt
+REM Install all dependencies
+echo Installing dependencies...
+pip install -r requirements.txt --quiet
+pip install -r backend/requirements.txt --quiet
 
-echo Installing Frontend Dependencies...
-cd ..\frontend
-pip install -r requirements.txt
-cd ..
+REM Start Backend API (serves frontend at http://localhost:8000)
+echo Starting Nukhba Elite backend...
+start cmd /k "call .venv\Scripts\activate.bat && cd /d %~dp0 && python -m uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000"
 
-REM Start services
-echo Starting FastAPI Backend...
-start cmd /k "call .venv\Scripts\activate.bat && cd backend && uvicorn main:app --reload --port 8000"
-
-echo Waiting for API to launch...
-timeout /t 5 /nobreak > nul
-
-echo Starting Streamlit Frontend...
-start cmd /k "call .venv\Scripts\activate.bat && cd frontend && streamlit run app.py --server.port 8501"
+timeout /t 4 /nobreak > nul
 
 echo ===========================================
-echo Services are Launching!
-echo Backend API Docs: http://localhost:8000/docs
-echo Frontend App: http://localhost:8501
+echo  Services Running!
+echo.
+echo  Web App:    http://localhost:8000/
+echo  Login Page: http://localhost:8000/web/index.html
+echo  API Docs:   http://localhost:8000/docs
 echo ===========================================
+
+REM Open browser
+start http://localhost:8000/web/index.html

@@ -1,0 +1,29 @@
+[33mcommit ad333947a5f9d00bc52714a6a47d3506efe77904[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Author: Mohammed Haneef M A <hmohammedbtech23@ced.alliance.edu.in>
+Date:   Fri Mar 27 00:15:37 2026 +0530
+
+    Decoupled Architecture: Pure FastAPI API + Standalone HTML Frontend 🏗️💎↔️🌐🚀
+
+[33mcommit 47fa8be9387d19978fde88992c4c06eb2f339681[m
+Author: Mohammed Haneef M A <hmohammedbtech23@ced.alliance.edu.in>
+Date:   Fri Mar 27 00:11:23 2026 +0530
+
+    Deployment: Added build.sh for automated Spacy model installation 🚀💎🛡️
+
+[33mcommit 486247be1a3d70be9ec1926376df10313179f9c3[m
+Author: Mohammed Haneef M A <hmohammedbtech23@ced.alliance.edu.in>
+Date:   Fri Mar 27 00:02:11 2026 +0530
+
+    Deployment Hardening: Unified Procfile, dynamic API URL & streamlined dependencies 🚀💎🛡️🥂✨
+
+[33mcommit c4ccd31a15b467b258be45b29250befe3b83bad7[m
+Author: Mohammed Haneef M A <hmohammedbtech23@ced.alliance.edu.in>
+Date:   Thu Mar 26 23:53:55 2026 +0530
+
+    Ultimate Registration Simplicity: Removed OTP step. Registration is now instant! ⚡💎🧼🚀
+
+[33mcommit acb6da0a26c46397b82f4523d1a097866f4410b3[m
+Author: Mohammed Haneef M A <hmohammedbtech23@ced.alliance.edu.in>
+Date:   Thu Mar 26 23:50:17 2026 +0530
+
+    Streamlined Registration: Removed Country and Phone fields for a faster email-only flow 🧼💎🚿🚀

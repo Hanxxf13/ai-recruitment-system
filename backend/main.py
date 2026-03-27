@@ -19,9 +19,14 @@ models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Nukhba Elite API | Talent Intelligence")
 
+# Serve the premium HTML frontend
+import pathlib
+_STATIC = pathlib.Path(__file__).parent.parent / "frontend" / "web"
+app.mount("/web", StaticFiles(directory=str(_STATIC), html=True), name="web")
+
 @app.get("/", include_in_schema=False)
 def root_redirect():
-    return RedirectResponse(url="/docs")
+    return RedirectResponse(url="/web/index.html")
 
 # Auto-seed on startup for Render ephemeral storage
 @app.on_event("startup")

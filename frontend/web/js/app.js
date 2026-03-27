@@ -1,13 +1,14 @@
+// ─── API CONFIGURATION ────────────────────────────────────────────────────────
 const API_URL = window.API_URL || (
-  window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
-  ? 'http://localhost:8000' 
-  : 'https://nukhba-elite-api.onrender.com' // Replace with your actual Render URL
+  (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+    ? 'http://localhost:8000'
+    : 'https://nukhba-elite-api.onrender.com'  // Replace with your Render URL
 );
 
 // ─── SESSION ──────────────────────────────────────────────────────────────────
 const session = {
-  get: () => JSON.parse(localStorage.getItem('nukhba_user') || 'null'),
-  set: (u) => localStorage.setItem('nukhba_user', JSON.stringify(u)),
+  get:   () => JSON.parse(localStorage.getItem('nukhba_user') || 'null'),
+  set:   (u) => localStorage.setItem('nukhba_user', JSON.stringify(u)),
   clear: () => localStorage.removeItem('nukhba_user'),
 };
 
@@ -23,93 +24,78 @@ function showToast(msg, type = 'info', duration = 4000) {
   t.className = `toast ${type}`;
   t.textContent = msg;
   container.appendChild(t);
-  setTimeout(() => t.remove(), duration);
+  setTimeout(() => {
+    t.style.animation = 'toastOut 0.3s ease forwards';
+    setTimeout(() => t.remove(), 300);
+  }, duration);
 }
 
 // ─── API HELPER ───────────────────────────────────────────────────────────────
 async function api(method, path, body = null, params = null) {
   let url = `${API_URL}${path}`;
   if (params) url += '?' + new URLSearchParams(params).toString();
+
   const opts = {
     method,
     headers: { 'Content-Type': 'application/json' },
   };
   if (body) opts.body = JSON.stringify(body);
-  try {
-    const res = await fetch(url, opts);
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(data.detail || `HTTP ${res.status}`);
-    return data;
-  } catch (err) {
-    throw err;
-  }
+
+  const res  = await fetch(url, opts);
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.detail || `HTTP ${res.status}`);
+  return data;
 }
 
-// ─── OTP COUNTDOWN ────────────────────────────────────────────────────────────
-function startOtpCountdown(seconds, onExpire) {
-  const timerEl = document.getElementById('otp-timer');
-  const bannerEl = document.getElementById('otp-active');
-  const expiredEl = document.getElementById('otp-expired');
-  const verifyBtn = document.getElementById('btn-verify');
-  const resendBtn = document.getElementById('btn-resend');
-  if (!timerEl) return;
-
-  let remaining = seconds;
-  const interval = setInterval(() => {
-    remaining--;
-    if (remaining <= 0) {
-      clearInterval(interval);
-      if (bannerEl) bannerEl.classList.add('hidden');
-      if (expiredEl) expiredEl.classList.remove('hidden');
-      if (verifyBtn) verifyBtn.disabled = true;
-      if (resendBtn) resendBtn.disabled = false;
-      if (onExpire) onExpire();
-    } else {
-      timerEl.textContent = remaining + 's';
-      if (remaining <= 10) timerEl.style.color = '#e53e3e';
-    }
-  }, 1000);
-  timerEl.textContent = remaining + 's';
-  return interval;
-}
-
-// ─── BTN LOADING STATE ────────────────────────────────────────────────────────
+// ─── BUTTON LOADING STATE ─────────────────────────────────────────────────────
 function setLoading(btn, loading) {
   if (loading) {
     btn.dataset.orig = btn.innerHTML;
-    btn.innerHTML = '<span class="spinner"></span>';
-    btn.disabled = true;
+    btn.innerHTML    = '<span class="spinner"></span>';
+    btn.disabled     = true;
   } else {
     btn.innerHTML = btn.dataset.orig || btn.innerHTML;
-    btn.disabled = false;
+    btn.disabled  = false;
   }
 }
 
-// ─── GUARD: redirect if not logged in ────────────────────────────────────────
+// ─── AUTH GUARD ───────────────────────────────────────────────────────────────
 function requireAuth(role = null) {
   const user = session.get();
-  if (!user) { window.location.href = '/index.html'; return null; }
+  if (!user) {
+    window.location.href = '/web/index.html';
+    return null;
+  }
   if (role && user.role !== role) {
     showToast('Access denied — wrong role', 'error');
-    setTimeout(() => window.location.href = '/index.html', 1500);
+    setTimeout(() => window.location.href = '/web/index.html', 1500);
     return null;
   }
   return user;
 }
 
-// ─── RENDER USER AVATAR ──────────────────────────────────────────────────────
+// ─── RENDER TOPBAR USER ───────────────────────────────────────────────────────
 function renderTopbar() {
   const user = session.get();
-  const el = document.getElementById('topbar-user');
+  const el   = document.getElementById('topbar-user');
   if (!el || !user) return;
   el.innerHTML = `
-    <span style="color:var(--text-dim);font-size:.85rem">${user.role}</span>
-    <div class="avatar">${user.name.charAt(0).toUpperCase()}</div>
-    <button class="btn btn-ghost" style="width:auto;padding:8px 16px" onclick="logout()">Logout</button>
+    <span style="color:var(--text-dim);font-size:.82rem;display:none" id="topbar-role">${user.role}</span>
+    <div style="text-align:right;display:none" id="topbar-name-wrap">
+      <div style="font-size:.88rem;font-weight:600">${user.name}</div>
+      <div style="font-size:.72rem;color:var(--text-muted)">${user.role}</div>
+    </div>
+    <div class="avatar" title="${user.name}" onclick="this.nextElementSibling.classList.toggle('hidden')">
+      ${user.name.charAt(0).toUpperCase()}
+    </div>
+    <button class="btn btn-ghost" style="width:auto;padding:8px 18px;font-size:.82rem" onclick="logout()">
+      Logout
+    </button>
   `;
 }
 
+// ─── LOGOUT ───────────────────────────────────────────────────────────────────
 function logout() {
   session.clear();
-  window.location.href = '/index.html';
+  window.location.href = '/web/index.html';
 }
