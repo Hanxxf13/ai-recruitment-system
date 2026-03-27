@@ -5,7 +5,8 @@ import time
 import json
 
 # ─── CONFIG & STYLE ───────────────────────────────────────────────────────────
-API_URL = "http://localhost:8000"
+# Use Streamlit Secrets for Cloud Deployment
+API_URL = st.secrets.get("API_URL", "http://localhost:8000")
 
 st.set_page_config(page_title="NUKHBA | Elite Selection 🥂", layout="wide")
 
