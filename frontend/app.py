@@ -12,7 +12,7 @@ st.set_page_config(page_title="NUKHBA | Elite Selection 🥂", layout="wide")
 # Cyber-Luxury Design System: Obsidian & Gold
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,900;1,400&family=Inter:wght@100;300;500;900&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,900;1,400&family=Inter:wght@100;300;500;900&family=Amiri:wght@400;700&display=swap');
     
     :root {
         --gold: #D4AF37;
@@ -133,8 +133,9 @@ def show_auth():
         
     with col2:
         st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-        st.markdown('<h3 style="text-align: center; color: var(--gold); letter-spacing: 2px; font-weight: 300;">ELITE SELECTION</h3>', unsafe_allow_html=True)
-        tab1, tab2 = st.tabs(["Login", "Request Access"])
+        st.markdown('<p style="text-align: center; font-family: \'Amiri\', serif; font-size: 2.5rem; color: var(--gold); margin-bottom: -15px;">نخبة</p>', unsafe_allow_html=True)
+        st.markdown('<h3 style="text-align: center; color: var(--gold); letter-spacing: 2px; font-weight: 300; margin-top: 0px;">ELITE SELECTION</h3>', unsafe_allow_html=True)
+        tab1, tab2 = st.tabs(["Login", "Registration"])
         
         with tab1:
             email = st.text_input("Email", key="login_email")
