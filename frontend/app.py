@@ -9,25 +9,93 @@ API_URL = "http://localhost:8000"
 
 st.set_page_config(page_title="NUKHBA | Elite Selection 🥂", layout="wide")
 
-# Obsidian & Gold Design System
+# Cyber-Luxury Design System: Obsidian & Gold
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Inter:wght@300;500;900&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,900;1,400&family=Inter:wght@100;300;500;900&display=swap');
     
     :root {
         --gold: #D4AF37;
+        --gold-glow: rgba(212, 175, 55, 0.4);
         --obsidian: #0A0A0B;
+        --charcoal: #1A1A1C;
         --glass: rgba(255, 255, 255, 0.03);
+        --glass-border: rgba(212, 175, 55, 0.15);
     }
     
-    .main { background-color: var(--obsidian); color: white; font-family: 'Inter', sans-serif; }
-    .stButton>button { 
-        background: linear-gradient(135deg, var(--gold), #B8860B); 
-        color: black; border: none; font-weight: 900; 
-        border-radius: 4px; padding: 10px 24px;
+    .stApp {
+        background: radial-gradient(circle at top right, #1A1A1D 0%, #0A0A0B 100%);
+        color: #E0E0E0;
+        font-family: 'Inter', sans-serif;
     }
-    h1, h2, h3 { font-family: 'Amiri', serif; color: var(--gold); }
-    .card { background: var(--glass); border: 1px solid rgba(212, 175, 55, 0.2); padding: 20px; border-radius: 12px; }
+    
+    /* Elegant Heading */
+    .hero-text {
+        font-family: 'Playfair Display', serif;
+        color: var(--gold);
+        font-size: 4rem;
+        line-height: 1;
+        font-weight: 900;
+        letter-spacing: -1px;
+        margin-bottom: 0.5rem;
+    }
+    
+    .sub-hero {
+        font-family: 'Inter', sans-serif;
+        color: #888;
+        font-weight: 100;
+        letter-spacing: 4px;
+        text-transform: uppercase;
+        font-size: 0.9rem;
+    }
+
+    /* Glassmorphic Card */
+    .glass-card {
+        background: var(--glass);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid var(--glass-border);
+        border-radius: 24px;
+        padding: 40px;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Minimalist Inputs */
+    .stTextInput>div>div>input {
+        background: transparent !important;
+        border: 0px !important;
+        border-bottom: 1px solid var(--glass-border) !important;
+        color: white !important;
+        border-radius: 0px !important;
+        padding-left: 0px !important;
+        font-weight: 300;
+    }
+    .stTextInput>div>div>input:focus {
+        border-bottom: 1px solid var(--gold) !important;
+        box-shadow: none !important;
+    }
+
+    /* "Enter the Vault" Button */
+    .stButton>button {
+        background: linear-gradient(135deg, #B8860B 0%, #D4AF37 50%, #FFD700 100%) !important;
+        color: black !important;
+        border: none !important;
+        font-weight: 900 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 2px !important;
+        padding: 12px 40px !important;
+        border-radius: 50px !important;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+        box-shadow: 0 0 20px var(--gold-glow) !important;
+    }
+    .stButton>button:hover {
+        transform: scale(1.05);
+        box-shadow: 0 0 40px var(--gold-glow) !important;
+    }
+
+    /* Hide Streamlit components */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
 </style>
 """, unsafe_allow_html=True)
 
@@ -37,15 +105,24 @@ if "page" not in st.session_state: st.session_state.page = "Auth"
 
 # ─── AUTH PAGE ───────────────────────────────────────────────────────────────
 def show_auth():
-    col1, col2 = st.columns([1, 1])
+    # Subtle top spacing
+    st.write("##")
+    
+    col1, padding, col2 = st.columns([1.2, 0.2, 1])
     
     with col1:
-        st.title("ELITE • SELECTION")
-        st.subheader("NUKHBA")
-        st.write("Welcome to the bridge of distinguished talent.")
+        st.markdown('<div style="margin-top: 100px;">', unsafe_allow_html=True)
+        st.markdown('<p class="sub-hero">Distinguished Talent Ecosystem</p>', unsafe_allow_html=True)
+        st.markdown('<h1 class="hero-text">NUKHBA</h1>', unsafe_allow_html=True)
+        st.markdown('<h2 style="font-family: \'Playfair Display\', serif; font-weight: 100; color: white; font-size: 2rem;">The Bridge of Excellence.</h2>', unsafe_allow_html=True)
+        st.write("---")
+        st.markdown('<p style="color: #666; font-size: 1.1rem; max-width: 80%;">An exclusive sanctuary for elite professionals and visionary recruiters. Secure entry required.</p>', unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
         
     with col2:
-        tab1, tab2 = st.tabs(["Sign In", "Register"])
+        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+        st.markdown('<h3 style="text-align: center; color: var(--gold); letter-spacing: 2px; font-weight: 300;">ELITE SELECTION</h3>', unsafe_allow_html=True)
+        tab1, tab2 = st.tabs(["🔒 Vault Entry", "🛡️ Request Access"])
         
         with tab1:
             email = st.text_input("Email", key="login_email")
@@ -82,6 +159,7 @@ def show_auth():
                             st.rerun()
                         else: st.error(res.json().get("detail", "Registration failed"))
                     except Exception as e: st.error(f"Error: {e}")
+        st.markdown('</div>', unsafe_allow_html=True)
 
 # ─── DASHBOARD ───────────────────────────────────────────────────────────────
 def show_dashboard():
