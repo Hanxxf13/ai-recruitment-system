@@ -87,11 +87,32 @@ def request_otp(email: str, phone: Optional[str] = None):
 
 @app.post("/users/login", response_model=schemas.UserResponse)
 def login_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
-    # simple mock login for MVP
+    # Persistent Audit Log
+    log_path = "backend/data/login_logs.json"
+    
     db_user = db.query(models.User).filter(
         models.User.email == user.email, 
         models.User.password == user.password
     ).first()
+    
+    status = "Success" if db_user else "Failed"
+    
+    # Write to audit log
+    logs = []
+    if os.path.exists(log_path):
+        with open(log_path, "r") as f:
+            try: logs = json.load(f)
+            except: pass
+    
+    logs.append({
+        "email": user.email,
+        "timestamp": str(datetime.now()),
+        "status": status
+    })
+    
+    with open(log_path, "w") as f:
+        json.dump(logs, f, indent=4)
+
     if not db_user:
         raise HTTPException(status_code=400, detail="Invalid credentials")
     return db_user
