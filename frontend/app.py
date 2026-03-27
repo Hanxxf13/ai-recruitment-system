@@ -153,13 +153,12 @@ def show_auth():
                 except: st.error("Backend not reachable")
                 
         with tab2:
-            st.info("Registration is currently direct (Email + Password only).")
             reg_name = st.text_input("Full Name")
             reg_role = st.selectbox("Role", ["Candidate", "HR", "Admin"])
             reg_email = st.text_input("Email Address")
             reg_pwd = st.text_input("Choose Password", type="password")
             
-            if st.button("💎 Join the Elite"):
+            if st.button("Register"):
                 if not reg_name or not reg_email or not reg_pwd:
                     st.warning("Please fill all fields")
                 else:
