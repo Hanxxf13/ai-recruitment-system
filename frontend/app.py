@@ -24,9 +24,21 @@ st.markdown("""
     }
     
     .stApp {
-        background: radial-gradient(circle at top right, #1A1A1D 0%, #0A0A0B 100%);
+        background: url("app/static/nukhba_bg.png") no-gradient;
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
         color: #E0E0E0;
         font-family: 'Inter', sans-serif;
+    }
+    
+    /* Overlay to ensure readability */
+    .stApp::before {
+        content: "";
+        position: absolute;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(10, 10, 11, 0.85);
+        z-index: -1;
     }
     
     /* Elegant Heading */
@@ -122,12 +134,12 @@ def show_auth():
     with col2:
         st.markdown('<div class="glass-card">', unsafe_allow_html=True)
         st.markdown('<h3 style="text-align: center; color: var(--gold); letter-spacing: 2px; font-weight: 300;">ELITE SELECTION</h3>', unsafe_allow_html=True)
-        tab1, tab2 = st.tabs(["🔒 Vault Entry", "🛡️ Request Access"])
+        tab1, tab2 = st.tabs(["Login", "Request Access"])
         
         with tab1:
             email = st.text_input("Email", key="login_email")
             pwd   = st.text_input("Password", type="password", key="login_pwd")
-            if st.button("✨ Enter the Vault"):
+            if st.button("Login"):
                 try:
                     res = requests.post(f"{API_URL}/users/login", json={"email":email, "password":pwd, "name":"", "role":""})
                     if res.status_code == 200:
