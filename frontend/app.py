@@ -152,26 +152,29 @@ def show_auth():
                     else: st.error("Invalid credentials")
                 except: st.error("Backend not reachable")
                 
-        with tab2:
-            reg_name = st.text_input("Full Name")
-            reg_role = st.selectbox("Role", ["Candidate", "HR", "Admin"])
-            reg_email = st.text_input("Email Address")
-            reg_pwd = st.text_input("Choose Password", type="password")
-            
-            if st.button("Register"):
-                if not reg_name or not reg_email or not reg_pwd:
-                    st.warning("Please fill all fields")
-                else:
-                    try:
-                        res = requests.post(f"{API_URL}/users/register", 
-                                            json={"name":reg_name, "email":reg_email, "password":reg_pwd, "role":reg_role})
-                        if res.status_code == 200:
-                            st.success("Account created! Signing you in...")
-                            st.session_state.user = res.json()
-                            time.sleep(1)
-                            st.rerun()
-                        else: st.error(res.json().get("detail", "Registration failed"))
-                    except Exception as e: st.error(f"Error: {e}")
+            # Centering the Register button
+            _, col_btn, _ = st.columns([1, 1, 1])
+            with col_btn:
+                if st.button("Register"):
+                    if not reg_name or not reg_email or not reg_pwd:
+                        st.warning("Please fill all fields")
+                    else:
+                        try:
+                            res = requests.post(f"{API_URL}/users/register", 
+                                                json={"name":reg_name, "email":reg_email, "password":reg_pwd, "role":reg_role})
+                            if res.status_code == 200:
+                                st.success("Account created! Signing you in...")
+                                st.session_state.user = res.json()
+                                time.sleep(1)
+                                st.rerun()
+                            else:
+                                try:
+                                    err_msg = res.json().get("detail", "Registration failed")
+                                    st.error(f"Error: {err_msg}")
+                                except:
+                                    st.error(f"Server returned an error (Code: {res.status_code}). Please check backend connectivity.")
+                        except Exception as e:
+                            st.error(f"Connection Error: Could not reach the backend. {e}")
         st.markdown('</div>', unsafe_allow_html=True)
 
 # ─── DASHBOARD ───────────────────────────────────────────────────────────────
