@@ -2,12 +2,66 @@ import streamlit as st
 import requests
 import pandas as pd
 import time
+import os
 
 # ─── CONFIG ───────────────────────────────────────────────────────────────────
 try:
     API_URL = st.secrets["API_URL"]
 except Exception:
     API_URL = "http://localhost:8000"
+
+# ─── GOOGLE AUTH SETUP ────────────────────────────────────────────────────────
+# Uses Google's standard OAuth 2.0 Authorization Code flow.
+# No extra packages needed — only the built-in 'requests' library.
+try:
+    _google_client_id     = st.secrets.get("GOOGLE_CLIENT_ID", "")
+    _google_client_secret = st.secrets.get("GOOGLE_CLIENT_SECRET", "")
+    _google_redirect_uri  = st.secrets.get("GOOGLE_REDIRECT_URI", "http://localhost:8501")
+except Exception:
+    _google_client_id = _google_client_secret = ""
+    _google_redirect_uri = "http://localhost:8501"
+
+_google_enabled = bool(
+    _google_client_id and
+    _google_client_id not in ("", "YOUR_GOOGLE_CLIENT_ID_HERE")
+)
+
+_GOOGLE_AUTH_URL  = "https://accounts.google.com/o/oauth2/v2/auth"
+_GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
+_GOOGLE_USERINFO  = "https://www.googleapis.com/oauth2/v3/userinfo"
+
+def _build_google_auth_url() -> str:
+    import urllib.parse
+    params = {
+        "client_id":     _google_client_id,
+        "redirect_uri":  _google_redirect_uri,
+        "response_type": "code",
+        "scope":         "openid email profile",
+        "access_type":   "offline",
+        "prompt":        "select_account",
+    }
+    return _GOOGLE_AUTH_URL + "?" + urllib.parse.urlencode(params)
+
+def _exchange_code_for_user(code: str) -> dict | None:
+    """Exchange OAuth code for user info via Google's token endpoint."""
+    try:
+        token_resp = requests.post(_GOOGLE_TOKEN_URL, data={
+            "code":          code,
+            "client_id":     _google_client_id,
+            "client_secret": _google_client_secret,
+            "redirect_uri":  _google_redirect_uri,
+            "grant_type":    "authorization_code",
+        }, timeout=10)
+        token_resp.raise_for_status()
+        access_token = token_resp.json().get("access_token")
+        if not access_token:
+            return None
+        info_resp = requests.get(_GOOGLE_USERINFO, headers={"Authorization": f"Bearer {access_token}"}, timeout=10)
+        info_resp.raise_for_status()
+        return info_resp.json()
+    except Exception:
+        return None
+
 
 st.set_page_config(
     page_title="نخبة | Nukhba Elite",
@@ -307,7 +361,54 @@ def call(method, path, **kwargs):
 # ──────────────────────────────────────────────────────────────────────────────
 # AUTH PAGE
 # ──────────────────────────────────────────────────────────────────────────────
+def _google_button_html(label: str = "Continue with Google") -> str:
+    """Returns a styled Google Sign-In button as HTML."""
+    url = _build_google_auth_url()
+    return f"""
+    <a href="{url}" target="_self" style="
+        display:flex; align-items:center; justify-content:center; gap:10px;
+        width:100%; padding:10px 16px; border-radius:10px;
+        background:#fff; color:#3c4043; font-family:'Inter',sans-serif;
+        font-weight:600; font-size:.9rem; text-decoration:none;
+        border:1px solid rgba(255,255,255,0.15);
+        box-shadow:0 2px 8px rgba(0,0,0,0.3);
+        transition: box-shadow 0.2s;">
+      <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+           width="20" height="20" alt="Google">
+      {label}
+    </a>
+    <div style="display:flex;align-items:center;gap:12px;margin:12px 0">
+      <div style="flex:1;height:1px;background:rgba(255,255,255,0.08)"></div>
+      <span style="color:#555;font-size:.75rem">or</span>
+      <div style="flex:1;height:1px;background:rgba(255,255,255,0.08)"></div>
+    </div>
+    """
+
 def show_auth():
+    # ── Handle returning Google OAuth callback ──
+    params = st.query_params
+    oauth_code = params.get("code", None)
+    if oauth_code and not st.session_state.user:
+        st.query_params.clear()
+        with st.spinner("Signing you in with Google…"):
+            info = _exchange_code_for_user(oauth_code)
+        if info:
+            res = call("POST", "/users/google-auth", json={
+                "google_id":  info.get("sub", ""),
+                "email":      info.get("email", ""),
+                "name":       info.get("name", ""),
+                "avatar_url": info.get("picture", ""),
+                "role":       "Candidate",
+            })
+            if res:
+                st.session_state.user = res
+                st.success(f"Welcome, **{res['name']}** 💎")
+                time.sleep(0.6)
+                st.rerun()
+        else:
+            st.error("Google sign-in failed. Please try again.")
+        st.stop()
+
     left, pad, right = st.columns([1.3, 0.15, 1])
 
     with left:
@@ -331,11 +432,14 @@ def show_auth():
 
     with right:
         st.markdown('<div class="login-card">', unsafe_allow_html=True)
-        
+
         tab_login, tab_reg = st.tabs(["  🔐  Sign In  ", "  ✨  Create Account  "])
 
         # ── Sign In ──
         with tab_login:
+            if _google_enabled:
+                st.markdown(_google_button_html("Continue with Google"), unsafe_allow_html=True)
+
             email = st.text_input("Email Address", placeholder="you@example.com", key="li_email")
             pwd   = st.text_input("Password",       placeholder="••••••••",        type="password", key="li_pwd")
 
@@ -362,6 +466,9 @@ def show_auth():
 
         # ── Register ──
         with tab_reg:
+            if _google_enabled:
+                st.markdown(_google_button_html("Register with Google"), unsafe_allow_html=True)
+
             c1, c2 = st.columns(2)
             with c1: reg_name = st.text_input("Full Name",    placeholder="Jane Doe",    key="rn")
             with c2: reg_role = st.selectbox("Role", ["Candidate","HR","Admin"],          key="rr")
@@ -387,10 +494,12 @@ def show_auth():
         st.markdown('</div>', unsafe_allow_html=True)
 
 
+
 # ──────────────────────────────────────────────────────────────────────────────
 # SHARED SIDEBAR
 # ──────────────────────────────────────────────────────────────────────────────
 def render_sidebar(user):
+    avatar = user.get('avatar_url', '')
     with st.sidebar:
         st.markdown(f"""
         <div style="padding:8px 0 20px">
@@ -399,10 +508,8 @@ def render_sidebar(user):
         </div>
         <div style="background:#141416;border:1px solid rgba(201,168,76,.18);border-radius:12px;padding:14px 16px;margin-bottom:20px">
           <div style="display:flex;align-items:center;gap:12px">
-            <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#C9A84C,#8B6914);
-                        display:flex;align-items:center;justify-content:center;font-weight:900;color:#000;font-size:.9rem">
-              {user['name'][0].upper()}
-            </div>
+            { f'<img src="{avatar}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid #C9A84C">' if avatar else
+              f'<div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#C9A84C,#8B6914);display:flex;align-items:center;justify-content:center;font-weight:900;color:#000;font-size:.9rem">{user["name"][0].upper()}</div>' }
             <div>
               <div style="font-weight:700;font-size:.9rem">{user['name']}</div>
               <div style="font-size:.72rem;color:#888">{user['role']}</div>

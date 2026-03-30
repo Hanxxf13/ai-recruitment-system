@@ -53,6 +53,42 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# --- GOOGLE AUTH ENDPOINT ---
+@app.post("/users/google-auth", response_model=schemas.UserResponse)
+def google_auth(data: schemas.GoogleAuthCreate, db: Session = Depends(get_db)):
+    """
+    Called after Streamlit verifies the Google token.
+    Creates a new user or links Google to an existing email account.
+    """
+    # 1. Try to find by Google ID (returning user)
+    user = db.query(models.User).filter(models.User.google_id == data.google_id).first()
+
+    if not user:
+        # 2. Try to find by email (existing local account → link Google to it)
+        user = db.query(models.User).filter(models.User.email == data.email).first()
+        if user:
+            user.google_id = data.google_id
+            user.avatar_url = data.avatar_url
+            user.auth_provider = "google"
+            db.commit()
+            db.refresh(user)
+        else:
+            # 3. Brand new Google user
+            user = models.User(
+                name=data.name,
+                email=data.email,
+                google_id=data.google_id,
+                avatar_url=data.avatar_url,
+                auth_provider="google",
+                role=data.role or "Candidate",
+                password=None,
+            )
+            db.add(user)
+            db.commit()
+            db.refresh(user)
+
+    return user
+
 # --- USER ENDPOINTS ---
 @app.post("/users/register", response_model=schemas.UserResponse)
 def register_user(user: schemas.UserCreate, db: Session = Depends(get_db)):

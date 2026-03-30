@@ -10,6 +10,13 @@ class UserCreate(BaseModel):
     phone: Optional[str] = None
     country: Optional[str] = None
 
+class GoogleAuthCreate(BaseModel):
+    google_id: str
+    email: str
+    name: str
+    avatar_url: Optional[str] = None
+    role: Optional[str] = "Candidate"
+
 class UserResponse(BaseModel):
     id: int
     name: str
@@ -17,6 +24,8 @@ class UserResponse(BaseModel):
     role: str
     phone: Optional[str] = None
     country: Optional[str] = None
+    avatar_url: Optional[str] = None
+    auth_provider: Optional[str] = "local"
     
     class Config:
         from_attributes = True

@@ -21,3 +21,7 @@ Thumbs.db
 # IDEs
 .vscode/
 .idea/
+
+# Secrets & credentials (NEVER commit real values)
+.streamlit/secrets.toml
+google_credentials.json

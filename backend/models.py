@@ -8,11 +8,15 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String)
     email = Column(String, unique=True, index=True)
-    password = Column(String)
-    role = Column(String) # "Admin", "HR", "Candidate"
+    password = Column(String, nullable=True)       # Nullable for Google-only users
+    role = Column(String, default="Candidate")     # "Admin", "HR", "Candidate"
     phone = Column(String, nullable=True)
     country = Column(String, nullable=True)
-    
+    # Google OAuth fields
+    google_id = Column(String, unique=True, nullable=True, index=True)
+    avatar_url = Column(String, nullable=True)
+    auth_provider = Column(String, default="local") # "local" or "google"
+
     jobs = relationship("Job", back_populates="hr_user")
     applications = relationship("Application", back_populates="candidate")
 
