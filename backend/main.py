@@ -16,6 +16,27 @@ from . import models, schemas
 from .database import engine, get_db
 from .services.ai_screening import calculate_fit_score
 
+# ─── SMS HELPER ───────────────────────────────────────────────────────────────
+def send_sms(phone: str, msg: str):
+    twilio_sid = os.getenv("TWILIO_ACCOUNT_SID")
+    twilio_token = os.getenv("TWILIO_AUTH_TOKEN")
+    twilio_number = os.getenv("TWILIO_PHONE_NUMBER")
+    
+    # If production keys aren't set, intercept and mock it
+    if not (twilio_sid and twilio_token and twilio_number):
+        print(f"====================================")
+        print(f"🔔 [MOCK SMS TO {phone}]: {msg}")
+        print(f"====================================")
+        return
+        
+    try:
+        from twilio.rest import Client
+        client = Client(twilio_sid, twilio_token)
+        message = client.messages.create(body=msg, from_=twilio_number, to=phone)
+        print(f"[TWILIO SMS SENT] to {phone} (SID: {message.sid})")
+    except Exception as e:
+        print(f"[TWILIO EXCEPTION]: {e}")
+
 # ─── GOOGLE CLIENT ID ─────────────────────────────────────────────────────────
 GOOGLE_CLIENT_ID = os.getenv(
     "GOOGLE_CLIENT_ID",
@@ -211,6 +232,7 @@ async def update_profile(
     user_id: int, 
     background_tasks: BackgroundTasks,
     auto_apply: bool = Form(...),
+    phone: Optional[str] = Form(None),
     resume_text: Optional[str] = Form(None),
     resume_file: Optional[UploadFile] = File(None),
     db: Session = Depends(get_db)
@@ -236,6 +258,9 @@ async def update_profile(
     
     user.auto_apply = auto_apply
     user.resume_text = final_text
+    if phone:
+        user.phone = phone
+        
     db.commit()
     db.refresh(user)
     
@@ -262,6 +287,8 @@ def perform_auto_apply_for_candidate(candidate_id: int):
                 status, db_txt = "Rejected", "Discarded to save storage (Unmatched Candidate)"
             elif score is not None and score >= 75.0:
                 status, db_txt = "Shortlisted", candidate.resume_text
+                if candidate.phone:
+                    send_sms(candidate.phone, f"Nukhba Elite: You automatically matched {score}% for '{job.title}' and were Shortlisted!")
             else:
                 status, db_txt = "Screened", candidate.resume_text
                 
@@ -369,6 +396,8 @@ async def apply_job(
     elif score is not None and score >= 75.0:
         status = "Shortlisted"
         db_resume_text = final_resume_text
+        if candidate and candidate.phone:
+            send_sms(candidate.phone, f"Nukhba Elite: You matched {score}% for '{job.title}' and were instantly Shortlisted!")
     else:
         status = "Screened"
         db_resume_text = final_resume_text

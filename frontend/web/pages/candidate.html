@@ -170,6 +170,16 @@
           </div>
         </div>
 
+        <div class="form-group" style="margin-bottom:16px">
+          <label>Mobile Number (For SMS Alerts)</label>
+          <input type="tel" id="profile-phone" placeholder="+1 555-555-5555" style="width:100%;color:var(--text);font-size:.9rem;background:var(--input-bg);padding:10px;border-radius:var(--radius-sm);border:1px solid var(--border)">
+        </div>
+
+        <div class="form-group" id="web-push-container" style="display:none;background:rgba(201,168,76,0.1);padding:12px;border-radius:var(--radius-sm);border:1px solid rgba(201,168,76,0.3)">
+          <div style="font-size:.85rem;color:var(--gold);margin-bottom:8px">🔔 Enable Device Notifications</div>
+          <button class="btn" style="background:var(--gold);color:#000;font-size:.8rem;padding:6px 12px;width:auto;min-height:auto" onclick="requestDeviceNotifications()">Allow Notifications</button>
+        </div>
+
         <div class="form-group">
           <label>Upload PDF Resume</label>
           <input type="file" id="resume-file" accept=".pdf" style="margin-top:6px;width:100%;color:var(--text-dim);font-size:.85rem;background:var(--input-bg);padding:10px;border-radius:var(--radius-sm);border:1px solid var(--border)">
@@ -290,18 +300,44 @@
     const storedUser = JSON.parse(localStorage.getItem('nukhbaUser'));
     if (storedUser) {
       document.getElementById('auto-apply-toggle').checked = storedUser.auto_apply || false;
+      document.getElementById('profile-phone').value = storedUser.phone || '';
     }
+    checkPushStatus();
+  }
+
+  function checkPushStatus() {
+    if (!("Notification" in window)) return;
+    const container = document.getElementById('web-push-container');
+    if (Notification.permission === "default") {
+      container.style.display = 'block';
+    } else if (Notification.permission === "granted") {
+      container.style.display = 'block';
+      container.innerHTML = '<span style="color:var(--success);font-size:.85rem">✓ Device Notifications Enabled!</span>';
+    }
+  }
+  
+  function requestDeviceNotifications() {
+     Notification.requestPermission().then(perm => {
+        if (perm === "granted") {
+           document.getElementById('web-push-container').innerHTML = '<span style="color:var(--success);font-size:.85rem">✓ Device Notifications Enabled!</span>';
+           new Notification("Nukhba Elite", { body: "You will now receive AI Job Match alerts here!" });
+        } else {
+           document.getElementById('web-push-container').style.display = 'none';
+        }
+     });
   }
 
   async function saveProfile() {
     const btn = document.getElementById('btn-save-profile');
     const autoApply = document.getElementById('auto-apply-toggle').checked;
     const fileInput = document.getElementById('resume-file');
+    const phoneNum = document.getElementById('profile-phone').value.trim();
     
     setLoading(btn, true);
     try {
       const formData = new FormData();
       formData.append('auto_apply', autoApply);
+      if (phoneNum) formData.append('phone', phoneNum);
       if (fileInput.files[0]) formData.append('resume_file', fileInput.files[0]);
 
       let api_origin = window.location.origin;
@@ -426,6 +462,10 @@
       btn.innerHTML = '✓ Application Submitted';
       btn.disabled = true;
       showToast('Application submitted and scored by AI! 🤖', 'success');
+      if ("Notification" in window && Notification.permission === "granted") {
+        new Notification("Nukhba Elite: Application Processed", { body: `AI Score Computed: ${score?.toFixed(0)||'0'}%` });
+      }
+      
       await loadPortal();
     } catch(e) {
       let msg = e.message || String(e);
