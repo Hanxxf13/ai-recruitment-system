@@ -175,10 +175,6 @@
           <input type="file" id="resume-file" accept=".pdf" style="margin-top:6px;width:100%;color:var(--text-dim);font-size:.85rem;background:var(--input-bg);padding:10px;border-radius:var(--radius-sm);border:1px solid var(--border)">
         </div>
 
-        <div class="form-group" style="margin-bottom:20px">
-          <label>Or Edit Existing Resume Data</label>
-          <textarea id="profile-resume-text" rows="5" placeholder="Saved text will appear here..."></textarea>
-        </div>
 
         <div style="display:flex;align-items:center;gap:16px">
           <button class="btn btn-primary" id="btn-save-profile" style="width:auto" onclick="saveProfile()">Save Profile</button>
@@ -196,15 +192,11 @@
     <button class="modal-close" onclick="closeModal()">✕</button>
     <div class="modal-title" id="apply-job-title">Apply for Position</div>
     <div class="modal-subtitle">Paste or type your resume/experience below. Our AI will evaluate your fit instantly.</div>
-    <div class="form-group">
-      <label>Resume / Experience Summary</label>
-      <div id="quick-apply-alert" class="card" style="background:rgba(201,168,76,0.1);border-color:rgba(201,168,76,0.3);padding:12px;margin-bottom:12px;display:none;font-size:.85rem;color:var(--gold)">
-        💡 We will use your saved profile resume automatically! Feel free to edit it below for this specific job.
-      </div>
-      <textarea id="resume-text" rows="6" placeholder="Paste your resume here, or describe your skills and experience in detail…"></textarea>
-    </div>
     <div class="form-group" style="margin-top:12px">
-      <label>Attach PDF Resume (Overrides Text)</label>
+      <label>Attach PDF Resume</label>
+      <div id="quick-apply-alert" class="card" style="background:rgba(201,168,76,0.1);border-color:rgba(201,168,76,0.3);padding:12px;margin-bottom:12px;display:none;font-size:.85rem;color:var(--gold)">
+        💡 We will use your saved PDF resume automatically! Feel free to upload a different PDF for this specific job.
+      </div>
       <input type="file" id="apply-resume-file" accept=".pdf" style="width:100%;color:var(--text-dim);font-size:.85rem;background:var(--input-bg);padding:10px;border-radius:var(--radius-sm);border:1px solid var(--border)">
     </div>
     <div id="apply-result" class="hidden"></div>
@@ -298,21 +290,18 @@
     const storedUser = JSON.parse(localStorage.getItem('nukhbaUser'));
     if (storedUser) {
       document.getElementById('auto-apply-toggle').checked = storedUser.auto_apply || false;
-      document.getElementById('profile-resume-text').value = storedUser.resume_text || '';
     }
   }
 
   async function saveProfile() {
     const btn = document.getElementById('btn-save-profile');
     const autoApply = document.getElementById('auto-apply-toggle').checked;
-    const resumeText = document.getElementById('profile-resume-text').value.trim();
     const fileInput = document.getElementById('resume-file');
     
     setLoading(btn, true);
     try {
       const formData = new FormData();
       formData.append('auto_apply', autoApply);
-      if (resumeText) formData.append('resume_text', resumeText);
       if (fileInput.files[0]) formData.append('resume_file', fileInput.files[0]);
 
       let api_origin = window.location.origin;
@@ -344,7 +333,6 @@
       }
       localStorage.setItem('nukhbaUser', JSON.stringify(updatedUser));
       
-      document.getElementById('profile-resume-text').value = updatedUser.resume_text || '';
       document.getElementById('profile-save-status').style.display = 'inline';
       setTimeout(() => document.getElementById('profile-save-status').style.display = 'none', 3000);
       fileInput.value = ''; // clear file input
@@ -364,10 +352,8 @@
     
     const storedUser = JSON.parse(localStorage.getItem('nukhbaUser')) || {};
     if (storedUser.resume_text) {
-      document.getElementById('resume-text').value = storedUser.resume_text;
       document.getElementById('quick-apply-alert').style.display = 'block';
     } else {
-      document.getElementById('resume-text').value = '';
       document.getElementById('quick-apply-alert').style.display = 'none';
     }
     
@@ -383,18 +369,17 @@
 
   async function submitApplication() {
     const btn    = document.getElementById('btn-apply');
-    const resumeText = document.getElementById('resume-text').value.trim();
     const fileInput  = document.getElementById('apply-resume-file');
+    const storedUser = JSON.parse(localStorage.getItem('nukhbaUser')) || {};
     
-    if (!resumeText && (!fileInput || !fileInput.files[0])) {
-      return showToast('Please enter your resume or attach a PDF','error');
+    if (!fileInput.files[0] && !storedUser.resume_text) {
+      return showToast('Please attach a PDF resume to apply!','error');
     }
     
     setLoading(btn, true);
     try {
       const formData = new FormData();
       formData.append('job_id', currentJob.id);
-      if (resumeText) formData.append('resume_text', resumeText);
       if (fileInput && fileInput.files[0]) formData.append('resume_file', fileInput.files[0]);
 
       let api_origin = window.location.origin;

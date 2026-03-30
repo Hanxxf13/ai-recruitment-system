@@ -209,6 +209,7 @@ def reset_password(data: schemas.UserCreate, db: Session = Depends(get_db)):
 @app.post("/users/{user_id}/profile", response_model=schemas.UserResponse)
 async def update_profile(
     user_id: int, 
+    background_tasks: BackgroundTasks,
     auto_apply: bool = Form(...),
     resume_text: Optional[str] = Form(None),
     resume_file: Optional[UploadFile] = File(None),
@@ -237,9 +238,40 @@ async def update_profile(
     user.resume_text = final_text
     db.commit()
     db.refresh(user)
+    
+    if user.auto_apply and user.resume_text:
+        background_tasks.add_task(perform_auto_apply_for_candidate, user.id)
+        
     return user
 
 # ─── JOB ENDPOINTS ────────────────────────────────────────────────────────────
+def perform_auto_apply_for_candidate(candidate_id: int):
+    from .database import SessionLocal
+    db = SessionLocal()
+    try:
+        candidate = db.query(models.User).filter(models.User.id == candidate_id).first()
+        if not candidate or not candidate.auto_apply or not candidate.resume_text: return
+        open_jobs = db.query(models.Job).filter(models.Job.status == "Open").all()
+        for job in open_jobs:
+            existing = db.query(models.Application).filter(models.Application.job_id == job.id, models.Application.candidate_id == candidate.id).first()
+            if existing: continue
+            
+            ai_result = calculate_fit_score(candidate.resume_text, job.requirements)
+            score = ai_result["score"]
+            if score is not None and score < 50.0:
+                status, db_txt = "Rejected", "Discarded to save storage (Unmatched Candidate)"
+            elif score is not None and score >= 75.0:
+                status, db_txt = "Shortlisted", candidate.resume_text
+            else:
+                status, db_txt = "Screened", candidate.resume_text
+                
+            new_app = models.Application(job_id=job.id, candidate_id=candidate.id, resume_text=db_txt, ai_score=score, ai_feedback=ai_result["feedback"], status=status)
+            db.add(new_app)
+        db.commit()
+    except Exception as e:
+        print(f"[AUTO-APPLY CANDIDATE ERROR]: {e}")
+    finally:
+        db.close()
 def perform_auto_apply(job_id: int):
     from .database import SessionLocal
     db = SessionLocal()
@@ -320,9 +352,12 @@ async def apply_job(
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"Failed to extract PDF text: {str(e)}")
             
-    final_resume_text = extracted_text or resume_text or ""
-    if not final_resume_text.strip():
-        raise HTTPException(status_code=400, detail="A resume (PDF or text) is required.")
+    candidate = db.query(models.User).filter(models.User.id == candidate_id).first()
+    candidate_profile_resume = candidate.resume_text if candidate else ""
+    
+    final_resume_text = extracted_text or resume_text or candidate_profile_resume
+    if not final_resume_text or not final_resume_text.strip():
+        raise HTTPException(status_code=400, detail="A resume PDF or a saved profile resume is required.")
 
     ai_result = calculate_fit_score(final_resume_text, job.requirements)
     score = ai_result["score"]
