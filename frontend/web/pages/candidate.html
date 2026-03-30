@@ -215,7 +215,7 @@
           <div class="job-reqs">🔑 ${j.requirements}</div>
           ${applied
             ? `<button class="btn btn-ghost" disabled style="cursor:default;opacity:0.5">✓ Already Applied</button>`
-            : `<button class="btn btn-primary" onclick="openApply(${JSON.stringify(j)})">Apply Now →</button>`
+            : `<button class="btn btn-primary" onclick="openApply(${j.id})">Apply Now →</button>`
           }
         </div>`;
     }).join('');
@@ -260,7 +260,8 @@
     document.getElementById('profile-role').textContent   = user.role;
   }
 
-  function openApply(job) {
+  function openApply(jobId) {
+    const job = allJobs.find(x => x.id === jobId);
     currentJob = job;
     document.getElementById('apply-job-title').textContent = job.title;
     document.getElementById('resume-text').value = '';

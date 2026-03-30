@@ -288,7 +288,7 @@
         <td>${a._job?.title||'—'}</td>
         <td><span class="badge ${scoreColor(a.ai_score)}">${a.ai_score?.toFixed(1)||'—'}%</span></td>
         <td><span class="badge badge-dim">${a.status}</span></td>
-        <td><button class="btn btn-ghost" style="width:auto;padding:6px 12px;font-size:.78rem" onclick='viewApp(${JSON.stringify(a)})'>Review</button></td>
+        <td><button class="btn btn-ghost" style="width:auto;padding:6px 12px;font-size:.78rem" onclick="viewApp(${a.id})">Review</button></td>
       </tr>`).join('');
   }
 
@@ -328,11 +328,12 @@
             ${['Screened','Shortlisted','Interview','Rejected','Hired'].map(s=>`<option ${a.status===s?'selected':''}>${s}</option>`).join('')}
           </select>
         </td>
-        <td><button class="btn btn-ghost" style="width:auto;padding:6px 12px;font-size:.78rem" onclick='viewApp(${JSON.stringify(a)})'>Detail</button></td>
+        <td><button class="btn btn-ghost" style="width:auto;padding:6px 12px;font-size:.78rem" onclick="viewApp(${a.id})">Detail</button></td>
       </tr>`).join('');
   }
 
-  function viewApp(a) {
+  function viewApp(appId) {
+    const a = allApplications.find(x => x.id === appId);
     document.getElementById('modal-title').textContent = `${a._job?.title || 'Application'} — Review`;
     document.getElementById('modal-body').innerHTML = `
       <div class="ai-score-ring">
