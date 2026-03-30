@@ -201,7 +201,11 @@
       <div id="quick-apply-alert" class="card" style="background:rgba(201,168,76,0.1);border-color:rgba(201,168,76,0.3);padding:12px;margin-bottom:12px;display:none;font-size:.85rem;color:var(--gold)">
         💡 We will use your saved profile resume automatically! Feel free to edit it below for this specific job.
       </div>
-      <textarea id="resume-text" rows="8" placeholder="Paste your resume here, or describe your skills and experience in detail…"></textarea>
+      <textarea id="resume-text" rows="6" placeholder="Paste your resume here, or describe your skills and experience in detail…"></textarea>
+    </div>
+    <div class="form-group" style="margin-top:12px">
+      <label>Attach PDF Resume (Overrides Text)</label>
+      <input type="file" id="apply-resume-file" accept=".pdf" style="width:100%;color:var(--text-dim);font-size:.85rem;background:var(--input-bg);padding:10px;border-radius:var(--radius-sm);border:1px solid var(--border)">
     </div>
     <div id="apply-result" class="hidden"></div>
     <button class="btn btn-primary" id="btn-apply" onclick="submitApplication()">🚀 Submit & Get AI Score</button>
@@ -349,6 +353,8 @@
       document.getElementById('quick-apply-alert').style.display = 'none';
     }
     
+    if(document.getElementById('apply-resume-file')) document.getElementById('apply-resume-file').value = '';
+    
     document.getElementById('apply-result').classList.add('hidden');
     document.getElementById('apply-modal').classList.remove('hidden');
   }
@@ -359,19 +365,43 @@
 
   async function submitApplication() {
     const btn    = document.getElementById('btn-apply');
-    const resume = document.getElementById('resume-text').value.trim();
-    if (!resume) return showToast('Please enter your resume or experience summary','error');
+    const resumeText = document.getElementById('resume-text').value.trim();
+    const fileInput  = document.getElementById('apply-resume-file');
+    
+    if (!resumeText && (!fileInput || !fileInput.files[0])) {
+      return showToast('Please enter your resume or attach a PDF','error');
+    }
+    
     setLoading(btn, true);
     try {
-      const result = await api('POST', `/applications?candidate_id=${user.id}`,
-        { job_id: currentJob.id, resume_text: resume });
+      const formData = new FormData();
+      formData.append('job_id', currentJob.id);
+      if (resumeText) formData.append('resume_text', resumeText);
+      if (fileInput && fileInput.files[0]) formData.append('resume_file', fileInput.files[0]);
+
+      let api_origin = window.location.origin;
+      if (api_origin.includes('127.0.0.1')) api_origin = 'http://localhost:8000';
+      if (api_origin.includes('github.io')) api_origin = 'https://ai-recruitment-system-1.onrender.com';
+      
+      const res = await fetch(`${api_origin}/applications?candidate_id=${user.id}`, {
+        method: 'POST',
+        body: formData
+      });
+      
+      if (!res.ok) throw new Error(await res.text() || "Submission failed");
+      const result = await res.json();
+      
       const score = result.ai_score;
       const color = score>=75?'#68d391':score>=50?'var(--gold)':'#fc8181';
+      let storageNote = score < 50 ? '<div style="font-size:.7rem;color:var(--danger);margin-top:12px">❌ Unmatched — Resume data purged to save system storage</div>' : '';
+      let shortlistNote = score >= 75 ? '<div style="font-size:.7rem;color:var(--success);margin-top:12px">✨ Automatically Shortlisted!</div>' : '';
       document.getElementById('apply-result').innerHTML = `
         <div class="ai-result">
           <div class="score-big" style="color:${color}">${score?.toFixed(0)||'—'}%</div>
           <div class="score-label">Your AI Fit Score</div>
           <p class="feedback-text">${result.ai_feedback||'No feedback available.'}</p>
+          ${shortlistNote}
+          ${storageNote}
         </div>`;
       document.getElementById('apply-result').classList.remove('hidden');
       btn.innerHTML = '✓ Application Submitted';

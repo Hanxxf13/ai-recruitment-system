@@ -290,41 +290,79 @@ def get_jobs(db: Session = Depends(get_db)):
 
 # ─── APPLICATION ENDPOINTS ────────────────────────────────────────────────────
 @app.post("/applications", response_model=schemas.ApplicationResponse)
-def apply_job(app_data: schemas.ApplicationCreate, candidate_id: int, db: Session = Depends(get_db)):
+async def apply_job(
+    candidate_id: int, 
+    job_id: int = Form(...),
+    resume_text: Optional[str] = Form(None),
+    resume_file: Optional[UploadFile] = File(None),
+    db: Session = Depends(get_db)
+):
     existing = db.query(models.Application).filter(
-        models.Application.job_id == app_data.job_id,
+        models.Application.job_id == job_id,
         models.Application.candidate_id == candidate_id
     ).first()
     if existing:
         raise HTTPException(status_code=400, detail="Already applied to this job")
 
-    job = db.query(models.Job).filter(models.Job.id == app_data.job_id).first()
+    job = db.query(models.Job).filter(models.Job.id == job_id).first()
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
 
-    ai_result = calculate_fit_score(app_data.resume_text, job.requirements)
+    extracted_text = ""
+    if resume_file and resume_file.filename:
+        try:
+            import fitz
+            content = await resume_file.read()
+            doc = fitz.open(stream=content, filetype="pdf")
+            for page in doc:
+                extracted_text += page.get_text()
+            extracted_text = extracted_text.strip()
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Failed to extract PDF text: {str(e)}")
+            
+    final_resume_text = extracted_text or resume_text or ""
+    if not final_resume_text.strip():
+        raise HTTPException(status_code=400, detail="A resume (PDF or text) is required.")
+
+    ai_result = calculate_fit_score(final_resume_text, job.requirements)
+    score = ai_result["score"]
+    
+    # ─── AUTO-ROUTING & STORAGE CONTROL ───
+    if score is not None and score < 50.0:
+        status = "Rejected"
+        db_resume_text = "Discarded to save storage (Unmatched Candidate)"
+    elif score is not None and score >= 75.0:
+        status = "Shortlisted"
+        db_resume_text = final_resume_text
+    else:
+        status = "Screened"
+        db_resume_text = final_resume_text
 
     new_app = models.Application(
-        job_id=app_data.job_id,
+        job_id=job_id,
         candidate_id=candidate_id,
-        resume_text=app_data.resume_text,
-        ai_score=ai_result["score"],
+        resume_text=db_resume_text,
+        ai_score=score,
         ai_feedback=ai_result["feedback"],
-        status="Screened",
+        status=status,
     )
     db.add(new_app); db.commit(); db.refresh(new_app)
 
-    # Save resume text
-    os.makedirs("backend/data/resumes", exist_ok=True)
-    fname = f"backend/data/resumes/app_{new_app.id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
-    with open(fname, "w", encoding="utf-8") as f:
-        f.write(f"Candidate: {candidate_id}\nJob: {new_app.job_id}\nScore: {new_app.ai_score}\n\n{new_app.resume_text}")
+    # Save physical file ONLY if matched to save disk space
+    if score is not None and score >= 50.0:
+        os.makedirs("backend/data/resumes", exist_ok=True)
+        fname = f"backend/data/resumes/app_{new_app.id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
+        with open(fname, "w", encoding="utf-8") as f:
+            f.write(f"Candidate: {candidate_id}\nJob: {new_app.job_id}\nScore: {new_app.ai_score}\n\n{final_resume_text}")
 
     return new_app
 
 @app.get("/applications/{job_id}", response_model=List[schemas.ApplicationResponse])
 def get_applications_for_job(job_id: int, db: Session = Depends(get_db)):
-    return db.query(models.Application).filter(models.Application.job_id == job_id).all()
+    return db.query(models.Application).filter(
+        models.Application.job_id == job_id,
+        models.Application.status != "Rejected"  # Auto-hide discards
+    ).all()
 
 @app.get("/applications/candidate/{candidate_id}", response_model=List[schemas.ApplicationResponse])
 def get_candidate_applications(candidate_id: int, db: Session = Depends(get_db)):
