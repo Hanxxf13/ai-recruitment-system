@@ -332,6 +332,12 @@
           const json = JSON.parse(errText);
           parsedErr = json.detail ? (typeof json.detail === 'string' ? json.detail : JSON.stringify(json.detail)) : errText;
         } catch(ex) {}
+        
+        if (parsedErr === "User not found") {
+          localStorage.removeItem('nukhbaUser');
+          return window.location.href = '../../index.html';
+        }
+        
         throw new Error(parsedErr || 'Failed to save profile');
       } else {
         updatedUser = await res.json();
@@ -408,6 +414,12 @@
           const json = JSON.parse(errText);
           parsedErr = json.detail ? (typeof json.detail === 'string' ? json.detail : JSON.stringify(json.detail)) : errText;
         } catch(ex) {}
+        
+        if (parsedErr === "User not found") {
+          localStorage.removeItem('nukhbaUser');
+          return window.location.href = '../../index.html';
+        }
+        
         throw new Error(parsedErr || "Submission failed");
       } else {
         result = await res.json();
