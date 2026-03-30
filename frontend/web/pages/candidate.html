@@ -324,7 +324,14 @@
         body: formData
       });
       
-      if (!res.ok) throw new Error(await res.text() || 'Failed to save profile');
+      let errText = await res.text();
+      let parsedErr = errText;
+      try {
+        const json = JSON.parse(errText);
+        parsedErr = json.detail ? (typeof json.detail === 'string' ? json.detail : JSON.stringify(json.detail)) : errText;
+      } catch(ex) {}
+      if (!res.ok) throw new Error(parsedErr || 'Failed to save profile');
+      
       const updatedUser = await res.json();
       localStorage.setItem('nukhbaUser', JSON.stringify(updatedUser));
       
@@ -333,7 +340,9 @@
       setTimeout(() => document.getElementById('profile-save-status').style.display = 'none', 3000);
       fileInput.value = ''; // clear file input
     } catch (e) {
-      showToast(e.message, 'error');
+      let msg = e.message || String(e);
+      if (msg === '[object Object]') msg = JSON.stringify(e);
+      showToast(msg, 'error');
     } finally {
       setLoading(btn, false);
     }
@@ -388,7 +397,14 @@
         body: formData
       });
       
-      if (!res.ok) throw new Error(await res.text() || "Submission failed");
+      let errText = await res.text();
+      let parsedErr = errText;
+      try {
+        const json = JSON.parse(errText);
+        parsedErr = json.detail ? (typeof json.detail === 'string' ? json.detail : JSON.stringify(json.detail)) : errText;
+      } catch(ex) {}
+      if (!res.ok) throw new Error(parsedErr || "Submission failed");
+      
       const result = await res.json();
       
       const score = result.ai_score;
@@ -409,7 +425,9 @@
       showToast('Application submitted and scored by AI! 🤖', 'success');
       await loadPortal();
     } catch(e) {
-      showToast(e.message||'Submission failed','error');
+      let msg = e.message || String(e);
+      if (msg === '[object Object]') msg = JSON.stringify(e);
+      showToast(msg, 'error');
       setLoading(btn, false);
     }
   }
