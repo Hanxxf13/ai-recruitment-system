@@ -324,15 +324,18 @@
         body: formData
       });
       
-      let errText = await res.text();
-      let parsedErr = errText;
-      try {
-        const json = JSON.parse(errText);
-        parsedErr = json.detail ? (typeof json.detail === 'string' ? json.detail : JSON.stringify(json.detail)) : errText;
-      } catch(ex) {}
-      if (!res.ok) throw new Error(parsedErr || 'Failed to save profile');
-      
-      const updatedUser = await res.json();
+      let updatedUser;
+      if (!res.ok) {
+        let errText = await res.text();
+        let parsedErr = errText;
+        try {
+          const json = JSON.parse(errText);
+          parsedErr = json.detail ? (typeof json.detail === 'string' ? json.detail : JSON.stringify(json.detail)) : errText;
+        } catch(ex) {}
+        throw new Error(parsedErr || 'Failed to save profile');
+      } else {
+        updatedUser = await res.json();
+      }
       localStorage.setItem('nukhbaUser', JSON.stringify(updatedUser));
       
       document.getElementById('profile-resume-text').value = updatedUser.resume_text || '';
@@ -397,15 +400,18 @@
         body: formData
       });
       
-      let errText = await res.text();
-      let parsedErr = errText;
-      try {
-        const json = JSON.parse(errText);
-        parsedErr = json.detail ? (typeof json.detail === 'string' ? json.detail : JSON.stringify(json.detail)) : errText;
-      } catch(ex) {}
-      if (!res.ok) throw new Error(parsedErr || "Submission failed");
-      
-      const result = await res.json();
+      let result;
+      if (!res.ok) {
+        let errText = await res.text();
+        let parsedErr = errText;
+        try {
+          const json = JSON.parse(errText);
+          parsedErr = json.detail ? (typeof json.detail === 'string' ? json.detail : JSON.stringify(json.detail)) : errText;
+        } catch(ex) {}
+        throw new Error(parsedErr || "Submission failed");
+      } else {
+        result = await res.json();
+      }
       
       const score = result.ai_score;
       const color = score>=75?'#68d391':score>=50?'var(--gold)':'#fc8181';
