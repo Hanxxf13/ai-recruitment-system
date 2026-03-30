@@ -5,6 +5,7 @@ pydantic
 python-multipart
 bcrypt
 google-auth
+pymupdf
 requests
 pandas
 streamlit

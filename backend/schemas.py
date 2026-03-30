@@ -31,6 +31,8 @@ class UserResponse(BaseModel):
     country: Optional[str] = None
     avatar_url: Optional[str] = None
     auth_provider: Optional[str] = "local"
+    resume_text: Optional[str] = None
+    auto_apply: bool = False
 
     class Config:
         from_attributes = True

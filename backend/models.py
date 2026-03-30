@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime, Boolean
 from sqlalchemy.orm import relationship
 from .database import Base
 import datetime
@@ -16,6 +16,8 @@ class User(Base):
     google_id = Column(String, unique=True, nullable=True, index=True)
     avatar_url = Column(String, nullable=True)
     auth_provider = Column(String, default="local") # "local" or "google"
+    resume_text = Column(String, nullable=True)     # Saved candidate resume
+    auto_apply = Column(Boolean, default=False)     # Auto-apply toggle
 
     jobs = relationship("Job", back_populates="hr_user")
     applications = relationship("Application", back_populates="candidate")

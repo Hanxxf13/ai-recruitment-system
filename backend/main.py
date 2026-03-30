@@ -6,7 +6,7 @@ from datetime import datetime
 from typing import List, Optional
 
 import bcrypt
-from fastapi import FastAPI, Depends, HTTPException, File, UploadFile
+from fastapi import FastAPI, Depends, HTTPException, File, UploadFile, Form, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
@@ -206,11 +206,82 @@ def reset_password(data: schemas.UserCreate, db: Session = Depends(get_db)):
     db.commit()
     return {"message": "Password reset successfully"}
 
+@app.post("/users/{user_id}/profile", response_model=schemas.UserResponse)
+async def update_profile(
+    user_id: int, 
+    auto_apply: bool = Form(...),
+    resume_text: Optional[str] = Form(None),
+    resume_file: Optional[UploadFile] = File(None),
+    db: Session = Depends(get_db)
+):
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    extracted_text = None
+    if resume_file and resume_file.filename:
+        try:
+            import fitz # PyMuPDF
+            content = await resume_file.read()
+            doc = fitz.open(stream=content, filetype="pdf")
+            extracted_text = ""
+            for page in doc:
+                extracted_text += page.get_text()
+            extracted_text = extracted_text.strip()
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Failed to extract PDF text: {str(e)}")
+            
+    final_text = extracted_text or resume_text or user.resume_text
+    
+    user.auto_apply = auto_apply
+    user.resume_text = final_text
+    db.commit()
+    db.refresh(user)
+    return user
+
 # ─── JOB ENDPOINTS ────────────────────────────────────────────────────────────
+def perform_auto_apply(job_id: int):
+    from .database import SessionLocal
+    db = SessionLocal()
+    try:
+        job = db.query(models.Job).filter(models.Job.id == job_id).first()
+        if not job: return
+        
+        candidates = db.query(models.User).filter(
+            models.User.role == "Candidate", 
+            models.User.auto_apply == True,
+            models.User.resume_text != None
+        ).all()
+        
+        for candidate in candidates:
+            existing = db.query(models.Application).filter(
+                models.Application.job_id == job.id,
+                models.Application.candidate_id == candidate.id
+            ).first()
+            if existing: continue
+            
+            ai_result = calculate_fit_score(candidate.resume_text, job.requirements)
+            new_app = models.Application(
+                job_id=job.id,
+                candidate_id=candidate.id,
+                resume_text=candidate.resume_text,
+                ai_score=ai_result["score"],
+                ai_feedback=ai_result["feedback"],
+                status="Screened",
+            )
+            db.add(new_app)
+        db.commit()
+    except Exception as e:
+        print(f"[AUTO-APPLY ERROR]: {e}")
+    finally:
+        db.close()
+
 @app.post("/jobs", response_model=schemas.JobResponse)
-def create_job(job: schemas.JobCreate, hr_id: int, db: Session = Depends(get_db)):
+def create_job(job: schemas.JobCreate, hr_id: int, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     new_job = models.Job(**job.dict(), hr_id=hr_id, status="Open")
     db.add(new_job); db.commit(); db.refresh(new_job)
+    
+    background_tasks.add_task(perform_auto_apply, new_job.id)
     return new_job
 
 @app.get("/jobs", response_model=List[schemas.JobResponse])
