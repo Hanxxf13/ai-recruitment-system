@@ -15,19 +15,18 @@ echo Installing dependencies...
 pip install -r requirements.txt --quiet
 pip install -r backend/requirements.txt --quiet
 
-REM Start Backend API (serves frontend at http://localhost:8000)
-echo Starting Nukhba Elite backend...
-start cmd /k "call .venv\Scripts\activate.bat && cd /d %~dp0 && python -m uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000"
-
-timeout /t 4 /nobreak > nul
-
-echo ===========================================
-echo  Services Running!
+REM Start Unified Backend and Frontend (Streamlit at 8501, FastAPI at 8000)
+echo Starting Nukhba Elite services...
 echo.
-echo  Web App:    http://localhost:8000/
-echo  Login Page: http://localhost:8000/web/index.html
-echo  API Docs:   http://localhost:8000/docs
 echo ===========================================
+echo  Services initializing...
+echo  Web App (Streamlit): http://localhost:8501
+echo  API (FastAPI):       http://localhost:8000
+echo ===========================================
+echo.
 
-REM Open browser
-start http://localhost:8000/web/index.html
+REM Open browser to the Streamlit frontend
+start http://localhost:8501
+
+REM Run the unified process manager
+python run_all.py

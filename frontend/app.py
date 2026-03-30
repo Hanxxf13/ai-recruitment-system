@@ -118,6 +118,9 @@ h1, h2, h3 { font-family: 'Playfair Display', serif !important; }
 }
 
 /* ─── Tabs ─── */
+.stTabs {
+  margin-top: 0 !important;
+}
 .stTabs [data-baseweb="tab-list"] {
   background: #111112 !important;
   border-radius: 12px !important;
@@ -131,7 +134,7 @@ h1, h2, h3 { font-family: 'Playfair Display', serif !important; }
   color: var(--dim) !important;
   font-weight: 600 !important;
   font-family: 'Inter', sans-serif !important;
-  padding: 8px 18px !important;
+  padding: 6px 14px !important;
 }
 .stTabs [aria-selected="true"] {
   background: linear-gradient(135deg, var(--gold-dk), var(--gold)) !important;
@@ -148,6 +151,14 @@ h1, h2, h3 { font-family: 'Playfair Display', serif !important; }
   letter-spacing: 1px !important;
 }
 
+/* ─── Reduce default Streamlit spacing ─── */
+[data-testid="stVerticalBlock"] > div {
+  gap: 0.8rem !important;
+}
+div.stButton > button {
+  margin-top: 10px !important;
+}
+
 /* ─── Alerts ─── */
 .stSuccess { background: rgba(56,161,105,0.1) !important; border-color: #38a169 !important; }
 .stError   { background: rgba(229,62,62,0.1)  !important; border-color: #e53e3e !important; }
@@ -158,7 +169,7 @@ h1, h2, h3 { font-family: 'Playfair Display', serif !important; }
   background: #111113;
   border: 1px solid var(--border);
   border-radius: 20px;
-  padding: 44px 40px;
+  padding: 32px 40px 24px;
   box-shadow: 0 24px 60px rgba(0,0,0,0.6);
 }
 .hero-arabic {
@@ -320,13 +331,7 @@ def show_auth():
 
     with right:
         st.markdown('<div class="login-card">', unsafe_allow_html=True)
-        st.markdown("""
-        <div style="text-align:center;margin-bottom:24px">
-          <div style="font-family:'Amiri',serif;font-size:2.2rem;color:#C9A84C">نخبة</div>
-          <div style="font-size:.65rem;letter-spacing:3px;color:#555;text-transform:uppercase">Elite Selection</div>
-        </div>
-        """, unsafe_allow_html=True)
-
+        
         tab_login, tab_reg = st.tabs(["  🔐  Sign In  ", "  ✨  Create Account  "])
 
         # ── Sign In ──

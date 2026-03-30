@@ -7,6 +7,13 @@ import os
 import json
 import shutil
 from datetime import datetime
+import bcrypt
+
+def get_password_hash(password):
+    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
+def verify_password(plain_password, hashed_password):
+    return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
 
 from . import models
 from . import schemas
@@ -53,8 +60,9 @@ def register_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     if db_user:
         raise HTTPException(status_code=400, detail="Email already registered")
     
+    hashed_pwd = get_password_hash(user.password)
     new_user = models.User(
-        name=user.name, email=user.email, password=user.password, role=user.role,
+        name=user.name, email=user.email, password=hashed_pwd, role=user.role,
         phone=user.phone, country=user.country
     )
     db.add(new_user)
@@ -96,11 +104,14 @@ def login_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     log_path = "backend/data/login_logs.json"
     
     db_user = db.query(models.User).filter(
-        models.User.email == user.email, 
-        models.User.password == user.password
+        models.User.email == user.email 
     ).first()
     
-    status = "Success" if db_user else "Failed"
+    if db_user and verify_password(user.password, db_user.password):
+        status = "Success"
+    else:
+        db_user = None
+        status = "Failed"
     
     # Write to audit log
     logs = []
@@ -127,7 +138,7 @@ def reset_password(data: schemas.UserCreate, db: Session = Depends(get_db)):
     db_user = db.query(models.User).filter(models.User.email == data.email).first()
     if not db_user:
         raise HTTPException(status_code=404, detail="User not found")
-    db_user.password = data.password
+    db_user.password = get_password_hash(data.password)
     db.commit()
     return {"message": "Password reset successfully"}
 
@@ -210,7 +221,7 @@ def seed_database(db: Session = Depends(get_db)):
     # Create HR User
     hr = db.query(models.User).filter(models.User.email == "hr@example.com").first()
     if not hr:
-        hr = models.User(name="HR Manager", email="hr@example.com", password="password123", role="HR", country="United Arab Emirates 🇦🇪", phone="+971 50 123 4567")
+        hr = models.User(name="HR Manager", email="hr@example.com", password=get_password_hash("password123"), role="HR", country="United Arab Emirates 🇦🇪", phone="+971 50 123 4567")
         db.add(hr)
         db.commit()
         db.refresh(hr)
@@ -218,7 +229,7 @@ def seed_database(db: Session = Depends(get_db)):
     # Create Candidate
     candidate = db.query(models.User).filter(models.User.email == "candidate@example.com").first()
     if not candidate:
-        candidate = models.User(name="John Doe", email="candidate@example.com", password="password123", role="Candidate", country="United Arab Emirates 🇦🇪", phone="+971 50 765 4321")
+        candidate = models.User(name="John Doe", email="candidate@example.com", password=get_password_hash("password123"), role="Candidate", country="United Arab Emirates 🇦🇪", phone="+971 50 765 4321")
         db.add(candidate)
         db.commit()
         db.refresh(candidate)
