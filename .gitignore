@@ -1,27 +1,25 @@
-# Environments
-venv/
-env/
-.env
-
-# Python compilation files
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
+*.py[cod]
+*$py.class
 
-# Databases 
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# SQLite Databases
 *.db
 *.sqlite3
-backend/data/
 
-# OS generated files
-.DS_Store
-Thumbs.db
-
-# IDEs
-.vscode/
-.idea/
-
-# Secrets & credentials (NEVER commit real values)
-.streamlit/secrets.toml
+# Ignore sensitive files
 google_credentials.json
+.streamlit/secrets.toml
+backend/data/login_logs.json
+backend/data/users_backup.json
+
+# Streamlit
+.streamlit/

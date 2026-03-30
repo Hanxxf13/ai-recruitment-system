@@ -1,13 +1,11 @@
 fastapi
-uvicorn
+uvicorn[standard]
 sqlalchemy
 pydantic
 python-multipart
-passlib[bcrypt]
-spacy
-streamlit
+bcrypt
+google-auth
 requests
 pandas
-twilio
+streamlit
 pydantic-settings
-# spacy model should be downloaded via command: python -m spacy download en_core_web_sm

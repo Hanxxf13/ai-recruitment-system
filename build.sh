@@ -1,8 +1,11 @@
 #!/usr/bin/env bash
-# exit on error
 set -o errexit
 
+echo "=== Installing dependencies ==="
+pip install --upgrade pip
 pip install -r requirements.txt
 
-# Download the Spacy model for AI screening
-python -m spacy download en_core_web_sm
+echo "=== Creating data directories ==="
+mkdir -p backend/data/resumes
+
+echo "=== Build complete ==="

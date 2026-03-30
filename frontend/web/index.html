@@ -4,10 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Nukhba Elite — Sign In</title>
-  <meta name="description" content="Nukhba Elite Recruitment — the world's most sophisticated talent intelligence platform." />
+  <meta name="description" content="Nukhba Elite Recruitment — the world's most sophisticated talent intelligence platform. Sign in or create your elite account." />
   <link rel="stylesheet" href="/web/css/style.css" />
+  <!-- Google Identity Services -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
-    /* ── PAGE-SPECIFIC: Full-screen split layout ── */
     html, body { height: 100%; overflow: hidden; }
     body { display: flex; }
 
@@ -20,28 +21,38 @@
       justify-content: flex-end;
       padding: 56px 52px;
       overflow: hidden;
+      background: #080809;
     }
     .left-bg {
       position: absolute;
       inset: 0;
       background:
-        linear-gradient(to bottom, rgba(8,8,9,0.2) 0%, rgba(8,8,9,0.88) 100%),
-        url('/nukhba_bg.png') center/cover no-repeat;
+        radial-gradient(ellipse at 30% 20%, rgba(201,168,76,0.08) 0%, transparent 50%),
+        radial-gradient(ellipse at 70% 80%, rgba(201,168,76,0.05) 0%, transparent 50%),
+        linear-gradient(160deg, #0d0b08 0%, #080809 50%, #060508 100%);
     }
-    /* Animated shimmer overlay */
     .left-bg::after {
       content: '';
       position: absolute;
       inset: 0;
       background: linear-gradient(135deg,
-        rgba(201,168,76,0.04) 0%,
-        transparent 60%,
-        rgba(201,168,76,0.02) 100%);
+        rgba(201,168,76,0.05) 0%, transparent 60%, rgba(201,168,76,0.03) 100%);
       animation: shimmer 8s ease-in-out infinite alternate;
     }
+    /* Decorative grid lines */
+    .left-bg::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(201,168,76,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(201,168,76,0.04) 1px, transparent 1px);
+      background-size: 60px 60px;
+      mask-image: radial-gradient(ellipse at center, rgba(0,0,0,0.4), transparent 70%);
+    }
     @keyframes shimmer {
-      from { opacity: 0.5; }
-      to   { opacity: 1; }
+      from { opacity: 0.4; }
+      to   { opacity: 1;   }
     }
     .left-content { position: relative; z-index: 1; }
 
@@ -61,11 +72,9 @@
       letter-spacing: 6px;
       text-transform: uppercase;
       margin: 10px 0 40px;
-      opacity: 0.7;
+      opacity: 0.6;
       animation: fadeUp 0.8s 0.1s ease both;
     }
-
-    /* Divider */
     .left-divider {
       width: 48px;
       height: 1px;
@@ -74,72 +83,37 @@
       animation: fadeUp 0.8s 0.2s ease both;
     }
 
-    /* Testimonial card */
+    /* Testimonial */
     .testimonial {
-      background: rgba(255,255,255,0.04);
+      background: rgba(255,255,255,0.03);
       backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.07);
       border-radius: 18px;
       padding: 28px 32px;
       max-width: 520px;
       animation: fadeUp 0.8s 0.3s ease both;
     }
-    .testimonial-quote {
-      font-size: 1.5rem;
-      color: var(--gold);
-      font-family: 'Playfair Display', serif;
-      margin-bottom: 10px;
-      opacity: 0.5;
-    }
-    .testimonial p {
-      font-size: 0.98rem;
-      line-height: 1.75;
-      color: var(--text);
-      font-style: italic;
-      opacity: 0.8;
-    }
-    .testimonial-author {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-top: 20px;
-    }
-    .author-avatar {
-      width: 36px; height: 36px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, var(--gold), var(--gold-dark));
-      display: flex; align-items: center; justify-content: center;
-      font-weight: 900; color: #000; font-size: 0.85rem;
-    }
-    .author-info { line-height: 1.3; }
+    .testimonial-quote { font-size: 1.5rem; color: var(--gold); font-family: 'Playfair Display', serif; margin-bottom: 10px; opacity: 0.4; }
+    .testimonial p { font-size: 0.97rem; line-height: 1.75; color: var(--text); font-style: italic; opacity: 0.75; }
+    .testimonial-author { display: flex; align-items: center; gap: 12px; margin-top: 20px; }
+    .author-avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, var(--gold), var(--gold-dark)); display: flex; align-items: center; justify-content: center; font-weight: 900; color: #000; font-size: .85rem; }
     .author-name  { font-size: 0.88rem; color: var(--gold); font-weight: 700; }
-    .author-title { font-size: 0.78rem; color: var(--text-dim); }
+    .author-title { font-size: 0.78rem; color: var(--text-muted); }
 
-    /* Feature pills */
-    .feature-pills {
+    /* Stats row */
+    .stats-row {
       display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
+      gap: 28px;
       margin-top: 36px;
-      animation: fadeUp 0.8s 0.4s ease both;
+      animation: fadeUp 0.8s 0.45s ease both;
     }
-    .pill {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 7px 14px;
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 100px;
-      font-size: 0.78rem;
-      color: var(--text-dim);
-    }
-    .pill .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--gold); }
+    .stat-item { text-align: left; }
+    .stat-num  { font-size: 1.8rem; font-weight: 900; color: var(--gold); line-height: 1; }
+    .stat-lbl  { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.8px; }
 
     /* ─── RIGHT PANEL ─── */
     .split-right {
-      width: 460px;
+      width: 480px;
       min-width: 420px;
       background: var(--dark);
       display: flex;
@@ -150,59 +124,33 @@
       border-left: 1px solid var(--border);
       position: relative;
     }
-    /* Subtle gold accent line on right edge */
     .split-right::before {
       content: '';
       position: absolute;
-      left: 0; top: 20%; bottom: 20%;
+      left: 0; top: 15%; bottom: 15%;
       width: 1px;
-      background: linear-gradient(to bottom, transparent, var(--gold), transparent);
-      opacity: 0.5;
+      background: linear-gradient(to bottom, transparent, rgba(201,168,76,0.5), transparent);
     }
 
-    .form-header { margin-bottom: 32px; animation: fadeUp 0.6s ease both; }
-    .form-header .form-logo {
-      font-family: 'Amiri', serif;
-      font-size: 2.4rem;
-      color: var(--gold);
-      line-height: 1;
-    }
-    .form-header .form-logo-sub {
-      font-size: 0.66rem;
-      letter-spacing: 3px;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      margin-bottom: 24px;
-    }
-    .form-title {
-      font-family: 'Playfair Display', serif;
-      font-size: 1.75rem;
-      font-weight: 700;
-      line-height: 1.2;
-      margin-bottom: 6px;
-    }
-    .form-desc { font-size: 0.88rem; color: var(--text-dim); }
+    .form-header { margin-bottom: 28px; animation: fadeUp 0.6s ease both; }
+    .form-logo     { font-family: 'Amiri', serif; font-size: 2.4rem; color: var(--gold); line-height: 1; }
+    .form-logo-sub { font-size: 0.63rem; letter-spacing: 3px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 22px; }
+    .form-title    { font-family: 'Playfair Display', serif; font-size: 1.75rem; font-weight: 700; line-height: 1.2; margin-bottom: 6px; }
+    .form-desc     { font-size: 0.88rem; color: var(--text-dim); }
 
-    /* ─── TAB BAR ─── */
+    /* Tab bar */
     .tab-bar {
       display: flex;
       background: var(--card);
       border-radius: 12px;
       padding: 4px;
-      margin-bottom: 30px;
+      margin-bottom: 26px;
       border: 1px solid var(--border2);
     }
     .tab {
-      flex: 1;
-      padding: 10px;
-      text-align: center;
-      border-radius: 9px;
-      cursor: pointer;
-      font-size: 0.85rem;
-      font-weight: 600;
-      color: var(--text-dim);
-      transition: all var(--transition);
-      user-select: none;
+      flex: 1; padding: 10px; text-align: center; border-radius: 9px;
+      cursor: pointer; font-size: .85rem; font-weight: 600;
+      color: var(--text-dim); transition: all var(--transition); user-select: none;
     }
     .tab.active {
       background: linear-gradient(135deg, var(--gold-dark), var(--gold));
@@ -210,117 +158,76 @@
       box-shadow: 0 2px 12px var(--gold-glow);
     }
 
-    /* ─── PASSWORD TOGGLE ─── */
+    /* Google button container */
+    .google-btn-container {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      min-height: 44px;
+      margin-bottom: 4px;
+    }
+    .google-btn-container iframe {
+      border-radius: 10px !important;
+    }
+
+    /* Or divider (hidden until Google loads) */
+    .or-divider {
+      display: none; /* shown by JS after Google loads */
+      align-items: center;
+      gap: 14px;
+      margin: 14px 0;
+      color: var(--text-muted);
+      font-size: 0.8rem;
+    }
+    .or-divider::before, .or-divider::after {
+      content: ''; flex: 1; height: 1px; background: var(--border2);
+    }
+
+    /* Password toggle */
     .pwd-wrap { position: relative; }
     .pwd-wrap input { padding-right: 44px; }
     .pwd-toggle {
-      position: absolute;
-      right: 14px; top: 50%;
-      transform: translateY(-50%);
-      background: none; border: none;
-      color: var(--text-muted);
-      cursor: pointer; font-size: 1rem;
-      transition: color var(--transition);
+      position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; color: var(--text-muted);
+      cursor: pointer; font-size: 1rem; transition: color var(--transition);
     }
     .pwd-toggle:hover { color: var(--gold); }
 
-    /* ─── STRENGTH BAR ─── */
-    .strength-bar {
-      display: flex;
-      gap: 4px;
-      margin-top: 8px;
-    }
-    .strength-seg {
-      flex: 1;
-      height: 3px;
-      border-radius: 2px;
-      background: var(--border2);
-      transition: background 0.3s;
-    }
-    .strength-text {
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      margin-top: 4px;
-    }
+    /* Strength bar */
+    .strength-bar { display: flex; gap: 4px; margin-top: 8px; }
+    .strength-seg { flex: 1; height: 3px; border-radius: 2px; background: var(--border2); transition: background 0.3s; }
+    .strength-text { font-size: 0.74rem; color: var(--text-muted); margin-top: 4px; }
 
-    /* ─── FORM COLS ─── */
+    /* 2-col grid */
     .form-cols-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 
-    /* ─── DIVIDER ─── */
-    .or-divider {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      margin: 20px 0;
-      color: var(--text-muted);
-      font-size: 0.82rem;
-    }
-    .or-divider::before, .or-divider::after {
-      content: '';
-      flex: 1;
-      height: 1px;
-      background: var(--border2);
-    }
-
-    /* ─── DEMO HINT ─── */
+    /* Demo hint */
     .demo-hint {
-      text-align: center;
-      margin-top: 20px;
-      padding: 10px 14px;
+      text-align: center; margin-top: 18px; padding: 10px 14px;
       background: rgba(201,168,76,0.04);
       border: 1px dashed rgba(201,168,76,0.2);
-      border-radius: 10px;
-      font-size: 0.78rem;
-      color: var(--text-muted);
+      border-radius: 10px; font-size: 0.78rem; color: var(--text-muted);
     }
     .demo-hint code { color: var(--gold); background: none; font-size: inherit; }
 
-    /* ─── ANIMATIONS ─── */
+    /* Animations */
     @keyframes fadeUp {
       from { opacity: 0; transform: translateY(20px); }
       to   { opacity: 1; transform: translateY(0); }
     }
-    .panel-enter {
-      animation: fadeUp 0.35s ease both;
-    }
+    .panel-enter { animation: fadeUp 0.35s ease both; }
 
-    /* ─── LOADING OVERLAY ─── */
+    /* Page loader */
     #page-loader {
-      position: fixed; inset: 0;
-      background: var(--obsidian);
-      z-index: 9999;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-direction: column;
-      gap: 20px;
-      transition: opacity 0.5s;
+      position: fixed; inset: 0; background: var(--obsidian);
+      z-index: 9999; display: flex; align-items: center; justify-content: center;
+      flex-direction: column; gap: 20px; transition: opacity 0.5s;
     }
-    .loader-logo {
-      font-family: 'Amiri', serif;
-      font-size: 4rem;
-      color: var(--gold);
-      animation: pulse 1.5s ease-in-out infinite;
-    }
-    @keyframes pulse {
-      0%,100% { opacity: 1; }
-      50%      { opacity: 0.4; }
-    }
-    .loader-bar {
-      width: 120px; height: 2px;
-      background: var(--border2);
-      border-radius: 2px;
-      overflow: hidden;
-    }
-    .loader-bar-fill {
-      height: 100%;
-      background: linear-gradient(to right, var(--gold-dark), var(--gold));
-      animation: load 1.2s ease both;
-    }
-    @keyframes load {
-      from { width: 0; }
-      to   { width: 100%; }
-    }
+    .loader-logo { font-family: 'Amiri', serif; font-size: 4rem; color: var(--gold); animation: pulse 1.5s ease-in-out infinite; }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+    .loader-bar { width: 120px; height: 2px; background: var(--border2); border-radius: 2px; overflow: hidden; }
+    .loader-bar-fill { height: 100%; background: linear-gradient(to right, var(--gold-dark), var(--gold)); animation: load 1.2s ease both; }
+    @keyframes load { from { width: 0; } to { width: 100%; } }
 
     @media (max-width: 900px) {
       .split-left  { display: none; }
@@ -334,13 +241,13 @@
 </head>
 <body>
 
-<!-- ═══════════ PAGE LOADER ═══════════ -->
+<!-- PAGE LOADER -->
 <div id="page-loader">
   <div class="loader-logo">نخبة</div>
   <div class="loader-bar"><div class="loader-bar-fill"></div></div>
 </div>
 
-<!-- ═══════════════ LEFT PANE ═══════════════ -->
+<!-- ═══ LEFT PANEL ═══ -->
 <div class="split-left">
   <div class="left-bg"></div>
   <div class="left-content">
@@ -354,24 +261,32 @@
       <p>Nukhba transformed how we hire. We assembled our entire AI engineering team within days — talent quality we'd never accessed before.</p>
       <div class="testimonial-author">
         <div class="author-avatar">S</div>
-        <div class="author-info">
+        <div>
           <div class="author-name">Sneha Patel</div>
           <div class="author-title">Chief Engineering Officer · TechForward</div>
         </div>
       </div>
     </div>
 
-    <div class="feature-pills">
-      <div class="pill"><span class="dot"></span>AI-Powered Screening</div>
-      <div class="pill"><span class="dot"></span>Elite Talent Pool</div>
-      <div class="pill"><span class="dot"></span>Smart Matching</div>
-      <div class="pill"><span class="dot"></span>Instant Analytics</div>
+    <div class="stats-row">
+      <div class="stat-item">
+        <div class="stat-num">12K+</div>
+        <div class="stat-lbl">Elite Candidates</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">98%</div>
+        <div class="stat-lbl">Match Accuracy</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">3 Days</div>
+        <div class="stat-lbl">Avg. Hire Time</div>
+      </div>
     </div>
 
   </div>
 </div>
 
-<!-- ═══════════════ RIGHT PANE ═══════════════ -->
+<!-- ═══ RIGHT PANEL ═══ -->
 <div class="split-right">
 
   <div class="form-header">
@@ -389,8 +304,13 @@
     <div class="tab"        id="tab-register" onclick="switchTab('register')">Create Account</div>
   </div>
 
-  <!-- ── SIGN IN ── -->
+  <!-- ── SIGN IN PANEL ── -->
   <div id="panel-signin" class="panel-enter">
+
+    <!-- Google Sign-In button (rendered by GSI JS) -->
+    <div class="google-btn-container" id="google-signin-btn"></div>
+    <div class="or-divider">or continue with email</div>
+
     <div class="form-group">
       <label>Email Address</label>
       <div class="input-icon-wrap">
@@ -407,21 +327,27 @@
       </div>
     </div>
 
-    <div style="display:flex;justify-content:flex-end;margin-bottom:20px">
-      <span style="font-size:.82rem;color:var(--text-dim);cursor:pointer" onclick="showToast('Password reset coming soon 🛠','info')">Forgot password?</span>
+    <div style="display:flex;justify-content:flex-end;margin-bottom:18px">
+      <span style="font-size:.82rem;color:var(--text-dim);cursor:pointer"
+            onclick="showToast('Password reset — contact admin','info')">Forgot password?</span>
     </div>
 
     <button class="btn btn-primary" id="btn-login" onclick="doLogin()">
       Sign In &nbsp;→
     </button>
 
-    <div class="demo-hint" style="margin-top:20px">
+    <div class="demo-hint">
       Demo: <code>hr@example.com</code> / <code>password123</code>
     </div>
   </div>
 
-  <!-- ── REGISTER ── -->
+  <!-- ── REGISTER PANEL ── -->
   <div id="panel-register" class="hidden panel-enter">
+
+    <!-- Google Register button -->
+    <div class="google-btn-container" id="google-register-btn"></div>
+    <div class="or-divider">or register with email</div>
+
     <div class="form-cols-2">
       <div class="form-group">
         <label>Full Name</label>
@@ -432,7 +358,6 @@
         <select id="reg-role">
           <option value="Candidate">Candidate</option>
           <option value="HR">HR Manager</option>
-          <option value="Admin">Admin</option>
         </select>
       </div>
     </div>
@@ -481,8 +406,8 @@
   });
 
   // ── Redirect if already logged in ──
-  const me = session.get();
-  if (me) redirectByRole(me);
+  const _me = session.get();
+  if (_me) redirectByRole(_me);
 
   function redirectByRole(u) {
     if (u.role === 'HR' || u.role === 'Admin')
@@ -512,14 +437,14 @@
     }
   }
 
-  // ── Password visibility ──
+  // ── Password visibility toggle ──
   function togglePwd(id, btn) {
     const inp = document.getElementById(id);
-    if (inp.type === 'password') { inp.type = 'text';  btn.textContent = '🙈'; }
-    else                          { inp.type = 'password'; btn.textContent = '👁'; }
+    inp.type = inp.type === 'password' ? 'text' : 'password';
+    btn.textContent = inp.type === 'password' ? '👁' : '🙈';
   }
 
-  // ── Password strength ──
+  // ── Password strength meter ──
   function updateStrength(val) {
     let score = 0;
     if (val.length >= 8) score++;
@@ -531,11 +456,11 @@
     const labels = ['Weak','Fair','Good','Strong'];
 
     for (let i = 1; i <= 4; i++) {
-      const seg = document.getElementById('s'+i);
-      seg.style.background = i <= score ? colors[score-1] : 'rgba(255,255,255,0.06)';
+      document.getElementById('s'+i).style.background =
+        i <= score ? colors[score-1] : 'rgba(255,255,255,0.06)';
     }
     const lbl = document.getElementById('strength-label');
-    lbl.textContent = val.length ? labels[score-1] || '' : '';
+    lbl.textContent = val.length ? (labels[score-1] || '') : '';
     lbl.style.color = score ? colors[score-1] : 'var(--text-muted)';
   }
 
@@ -545,9 +470,10 @@
     const email = document.getElementById('login-email').value.trim();
     const pwd   = document.getElementById('login-password').value;
     if (!email || !pwd) return showToast('Please fill in all fields', 'error');
+
     setLoading(btn, true);
     try {
-      const user = await api('POST', '/users/login', { name:'', email, password:pwd, role:'' });
+      const user = await api('POST', '/users/login', { email, password: pwd });
       session.set(user);
       showToast(`Welcome back, ${user.name}! 💎`, 'success');
       setTimeout(() => redirectByRole(user), 900);
@@ -578,13 +504,12 @@
     } finally { setLoading(btn, false); }
   }
 
-  // ── Enter key shortcut ──
+  // ── Enter key ──
   document.addEventListener('keydown', e => {
-    if (e.key === 'Enter') {
-      const signinPanel = document.getElementById('panel-signin');
-      if (!signinPanel.classList.contains('hidden')) doLogin();
-      else doRegister();
-    }
+    if (e.key !== 'Enter') return;
+    const signinPanel = document.getElementById('panel-signin');
+    if (!signinPanel.classList.contains('hidden')) doLogin();
+    else doRegister();
   });
 </script>
 </body>

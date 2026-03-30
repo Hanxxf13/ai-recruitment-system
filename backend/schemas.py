@@ -3,12 +3,17 @@ from typing import List, Optional
 from datetime import datetime
 
 class UserCreate(BaseModel):
-    name: str
+    name: str = ""
     email: str
-    password: str
-    role: str
+    password: Optional[str] = None
+    role: str = "Candidate"
     phone: Optional[str] = None
     country: Optional[str] = None
+
+class GoogleVerifyToken(BaseModel):
+    """Receives the raw credential JWT from Google Identity Services."""
+    credential: str
+    role: Optional[str] = "Candidate"
 
 class GoogleAuthCreate(BaseModel):
     google_id: str
@@ -26,7 +31,7 @@ class UserResponse(BaseModel):
     country: Optional[str] = None
     avatar_url: Optional[str] = None
     auth_provider: Optional[str] = "local"
-    
+
     class Config:
         from_attributes = True
 
@@ -39,7 +44,7 @@ class JobResponse(JobCreate):
     id: int
     hr_id: int
     status: str
-    
+
     class Config:
         from_attributes = True
 
@@ -56,6 +61,6 @@ class ApplicationResponse(BaseModel):
     ai_score: Optional[float]
     ai_feedback: Optional[str]
     created_at: datetime
-    
+
     class Config:
         from_attributes = True

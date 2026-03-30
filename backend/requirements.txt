@@ -1,7 +1,8 @@
 fastapi
-uvicorn
+uvicorn[standard]
 sqlalchemy
 pydantic
 python-multipart
 bcrypt
-spacy
+google-auth
+requests

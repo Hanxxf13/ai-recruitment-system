@@ -1,51 +1,41 @@
-from fastapi import FastAPI, Depends, HTTPException, File, UploadFile
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
-from sqlalchemy.orm import Session
-from typing import List, Optional
 import os
 import json
 import shutil
+import pathlib
 from datetime import datetime
+from typing import List, Optional
+
 import bcrypt
+from fastapi import FastAPI, Depends, HTTPException, File, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
+from fastapi.staticfiles import StaticFiles
+from sqlalchemy.orm import Session
 
-def get_password_hash(password):
-    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-
-def verify_password(plain_password, hashed_password):
-    return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
-
-from . import models
-from . import schemas
+from . import models, schemas
 from .database import engine, get_db
 from .services.ai_screening import calculate_fit_score
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import HTMLResponse, RedirectResponse
 
+# ─── GOOGLE CLIENT ID ─────────────────────────────────────────────────────────
+GOOGLE_CLIENT_ID = os.getenv(
+    "GOOGLE_CLIENT_ID",
+    "21454828522-imfo3lhi3hrg4846hpm0m7fbn69t6ds0.apps.googleusercontent.com"
+)
+
+# ─── PASSWORD HELPERS ─────────────────────────────────────────────────────────
+def get_password_hash(password: str) -> str:
+    return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+
+def verify_password(plain: str, hashed: str) -> bool:
+    return bcrypt.checkpw(plain.encode("utf-8"), hashed.encode("utf-8"))
+
+# ─── DB INIT ──────────────────────────────────────────────────────────────────
 models.Base.metadata.create_all(bind=engine)
 
+# ─── APP ──────────────────────────────────────────────────────────────────────
 app = FastAPI(title="Nukhba Elite API | Talent Intelligence")
 
-# Serve the premium HTML frontend
-import pathlib
-_STATIC = pathlib.Path(__file__).parent.parent / "frontend" / "web"
-app.mount("/web", StaticFiles(directory=str(_STATIC), html=True), name="web")
-
-@app.get("/", include_in_schema=False)
-def root_redirect():
-    return RedirectResponse(url="/web/index.html")
-
-# Auto-seed on startup for Render ephemeral storage
-@app.on_event("startup")
-def startup_event():
-    from .database import SessionLocal
-    db = SessionLocal()
-    try:
-        seed_database(db)
-    finally:
-        db.close()
-
-# CORS for frontend
+# CORS — allow all origins for API
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -53,32 +43,74 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# --- GOOGLE AUTH ENDPOINT ---
-@app.post("/users/google-auth", response_model=schemas.UserResponse)
-def google_auth(data: schemas.GoogleAuthCreate, db: Session = Depends(get_db)):
-    """
-    Called after Streamlit verifies the Google token.
-    Creates a new user or links Google to an existing email account.
-    """
-    # 1. Try to find by Google ID (returning user)
-    user = db.query(models.User).filter(models.User.google_id == data.google_id).first()
+# ─── STATIC FRONTEND ──────────────────────────────────────────────────────────
+_STATIC = pathlib.Path(__file__).parent.parent / "frontend" / "web"
+app.mount("/web", StaticFiles(directory=str(_STATIC), html=True), name="web")
 
+@app.get("/", include_in_schema=False)
+def root_redirect():
+    return RedirectResponse(url="/web/index.html")
+
+# ─── STARTUP SEED ─────────────────────────────────────────────────────────────
+@app.on_event("startup")
+def startup_event():
+    from .database import SessionLocal
+    db = SessionLocal()
+    try:
+        _seed_database(db)
+    except Exception as e:
+        print(f"[WARNING] Seed skipped (non-fatal): {e}")
+    finally:
+        db.close()
+
+# ─── CONFIG ENDPOINT ──────────────────────────────────────────────────────────
+@app.get("/config")
+def get_config():
+    """Frontend fetches this to get the Google Client ID dynamically."""
+    client_id = GOOGLE_CLIENT_ID if GOOGLE_CLIENT_ID not in ("", "YOUR_GOOGLE_CLIENT_ID_HERE") else None
+    return {"google_client_id": client_id}
+
+# ─── GOOGLE SIGN-IN VERIFY ────────────────────────────────────────────────────
+@app.post("/users/google-verify", response_model=schemas.UserResponse)
+def google_verify(data: schemas.GoogleVerifyToken, db: Session = Depends(get_db)):
+    """
+    Verifies a Google Identity Services credential JWT.
+    Creates or finds the user in the database.
+    """
+    try:
+        from google.oauth2 import id_token
+        from google.auth.transport import requests as google_requests
+        idinfo = id_token.verify_oauth2_token(
+            data.credential,
+            google_requests.Request(),
+            GOOGLE_CLIENT_ID,
+        )
+    except Exception as e:
+        raise HTTPException(status_code=401, detail=f"Invalid Google token: {str(e)}")
+
+    google_id  = idinfo["sub"]
+    email      = idinfo.get("email", "")
+    name       = idinfo.get("name", "Unknown")
+    avatar_url = idinfo.get("picture", "")
+
+    # Try find by Google ID first (returning user)
+    user = db.query(models.User).filter(models.User.google_id == google_id).first()
     if not user:
-        # 2. Try to find by email (existing local account → link Google to it)
-        user = db.query(models.User).filter(models.User.email == data.email).first()
+        # Try link to existing email account
+        user = db.query(models.User).filter(models.User.email == email).first()
         if user:
-            user.google_id = data.google_id
-            user.avatar_url = data.avatar_url
+            user.google_id    = google_id
+            user.avatar_url   = avatar_url
             user.auth_provider = "google"
             db.commit()
             db.refresh(user)
         else:
-            # 3. Brand new Google user
+            # Brand-new user
             user = models.User(
-                name=data.name,
-                email=data.email,
-                google_id=data.google_id,
-                avatar_url=data.avatar_url,
+                name=name,
+                email=email,
+                google_id=google_id,
+                avatar_url=avatar_url,
                 auth_provider="google",
                 role=data.role or "Candidate",
                 password=None,
@@ -89,84 +121,78 @@ def google_auth(data: schemas.GoogleAuthCreate, db: Session = Depends(get_db)):
 
     return user
 
-# --- USER ENDPOINTS ---
+# ─── LEGACY GOOGLE-AUTH ENDPOINT (kept for compatibility) ─────────────────────
+@app.post("/users/google-auth", response_model=schemas.UserResponse)
+def google_auth(data: schemas.GoogleAuthCreate, db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.google_id == data.google_id).first()
+    if not user:
+        user = db.query(models.User).filter(models.User.email == data.email).first()
+        if user:
+            user.google_id    = data.google_id
+            user.avatar_url   = data.avatar_url
+            user.auth_provider = "google"
+            db.commit(); db.refresh(user)
+        else:
+            user = models.User(
+                name=data.name, email=data.email,
+                google_id=data.google_id, avatar_url=data.avatar_url,
+                auth_provider="google", role=data.role or "Candidate", password=None,
+            )
+            db.add(user); db.commit(); db.refresh(user)
+    return user
+
+# ─── USER ENDPOINTS ───────────────────────────────────────────────────────────
 @app.post("/users/register", response_model=schemas.UserResponse)
 def register_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
+    if not user.email or not user.password:
+        raise HTTPException(status_code=400, detail="Email and password are required")
+    if len(user.password) < 6:
+        raise HTTPException(status_code=400, detail="Password must be at least 6 characters")
+
     db_user = db.query(models.User).filter(models.User.email == user.email).first()
     if db_user:
         raise HTTPException(status_code=400, detail="Email already registered")
-    
-    hashed_pwd = get_password_hash(user.password)
+
+    hashed = get_password_hash(user.password)
     new_user = models.User(
-        name=user.name, email=user.email, password=hashed_pwd, role=user.role,
-        phone=user.phone, country=user.country
+        name=user.name, email=user.email, password=hashed,
+        role=user.role, phone=user.phone, country=user.country,
     )
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
-    # Persistent Backup (JSON)
-    backup_path = "backend/data/users_backup.json"
-    users_data = []
-    if os.path.exists(backup_path):
-        with open(backup_path, "r") as f:
-            try: users_data = json.load(f)
-            except: pass
-    users_data.append({"name": user.name, "email": user.email, "role": user.role, "phone": user.phone, "country": user.country, "timestamp": str(datetime.now())})
-    with open(backup_path, "w") as f:
-        json.dump(users_data, f, indent=4)
-        
+    db.add(new_user); db.commit(); db.refresh(new_user)
+
+    # Persistent JSON backup
+    _append_json("backend/data/users_backup.json", {
+        "name": user.name, "email": user.email, "role": user.role,
+        "phone": user.phone, "country": user.country, "timestamp": str(datetime.now()),
+    })
     return new_user
-
-@app.post("/users/request-otp")
-def request_otp(email: str, phone: Optional[str] = None):
-    """Generates an OTP and sends it via email/SMS fallback."""
-    import random
-    otp = str(random.randint(1000, 9999))
-    
-    # "Always Accessible" Outbox Fallback (Focus on Email for now)
-    outbox_path = "backend/data/sms_outbox.log"
-    with open(outbox_path, "a", encoding="utf-8") as f:
-        f.write(f"[{datetime.now()}] To: {email} | OTP: {otp} | Status: LOGGED (Email Only Flow)\n")
-
-    return {
-        "message": "OTP processed!", 
-        "otp": otp,
-        "status": "Email Only"
-    }
 
 @app.post("/users/login", response_model=schemas.UserResponse)
 def login_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
-    # Persistent Audit Log
-    log_path = "backend/data/login_logs.json"
-    
-    db_user = db.query(models.User).filter(
-        models.User.email == user.email 
-    ).first()
-    
-    if db_user and verify_password(user.password, db_user.password):
-        status = "Success"
-    else:
-        db_user = None
-        status = "Failed"
-    
-    # Write to audit log
-    logs = []
-    if os.path.exists(log_path):
-        with open(log_path, "r") as f:
-            try: logs = json.load(f)
-            except: pass
-    
-    logs.append({
-        "email": user.email,
-        "timestamp": str(datetime.now()),
-        "status": status
-    })
-    
-    with open(log_path, "w") as f:
-        json.dump(logs, f, indent=4)
+    db_user = db.query(models.User).filter(models.User.email == user.email).first()
 
     if not db_user:
+        _append_json("backend/data/login_logs.json", {
+            "email": user.email, "timestamp": str(datetime.now()), "status": "Failed - not found"
+        })
         raise HTTPException(status_code=400, detail="Invalid credentials")
+
+    # Google-only account
+    if db_user.auth_provider == "google" and not db_user.password:
+        raise HTTPException(
+            status_code=400,
+            detail="This account uses Google Sign-In. Please use the 'Continue with Google' button."
+        )
+
+    if not db_user.password or not verify_password(user.password or "", db_user.password):
+        _append_json("backend/data/login_logs.json", {
+            "email": user.email, "timestamp": str(datetime.now()), "status": "Failed - wrong password"
+        })
+        raise HTTPException(status_code=400, detail="Invalid credentials")
+
+    _append_json("backend/data/login_logs.json", {
+        "email": user.email, "timestamp": str(datetime.now()), "status": "Success"
+    })
     return db_user
 
 @app.put("/users/reset-password")
@@ -174,65 +200,56 @@ def reset_password(data: schemas.UserCreate, db: Session = Depends(get_db)):
     db_user = db.query(models.User).filter(models.User.email == data.email).first()
     if not db_user:
         raise HTTPException(status_code=404, detail="User not found")
+    if not data.password:
+        raise HTTPException(status_code=400, detail="New password required")
     db_user.password = get_password_hash(data.password)
     db.commit()
     return {"message": "Password reset successfully"}
 
-# --- JOB ENDPOINTS ---
+# ─── JOB ENDPOINTS ────────────────────────────────────────────────────────────
 @app.post("/jobs", response_model=schemas.JobResponse)
 def create_job(job: schemas.JobCreate, hr_id: int, db: Session = Depends(get_db)):
-    new_job = models.Job(**job.dict(), hr_id=hr_id)
-    db.add(new_job)
-    db.commit()
-    db.refresh(new_job)
+    new_job = models.Job(**job.dict(), hr_id=hr_id, status="Open")
+    db.add(new_job); db.commit(); db.refresh(new_job)
     return new_job
 
 @app.get("/jobs", response_model=List[schemas.JobResponse])
 def get_jobs(db: Session = Depends(get_db)):
     return db.query(models.Job).all()
 
-# --- APPLICATION ENDPOINTS ---
+# ─── APPLICATION ENDPOINTS ────────────────────────────────────────────────────
 @app.post("/applications", response_model=schemas.ApplicationResponse)
 def apply_job(app_data: schemas.ApplicationCreate, candidate_id: int, db: Session = Depends(get_db)):
-    # Check if applied
     existing = db.query(models.Application).filter(
         models.Application.job_id == app_data.job_id,
         models.Application.candidate_id == candidate_id
     ).first()
     if existing:
         raise HTTPException(status_code=400, detail="Already applied to this job")
-        
+
     job = db.query(models.Job).filter(models.Job.id == app_data.job_id).first()
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
 
-    # Run AI Screening
     ai_result = calculate_fit_score(app_data.resume_text, job.requirements)
-    
+
     new_app = models.Application(
         job_id=app_data.job_id,
         candidate_id=candidate_id,
         resume_text=app_data.resume_text,
         ai_score=ai_result["score"],
         ai_feedback=ai_result["feedback"],
-        status="Screened" # Auto advanced for MVP showcase
+        status="Screened",
     )
-    db.add(new_app)
-    db.commit()
-    db.refresh(new_app)
-    # Persistent Backup (TXT)
-    resume_filename = f"backend/data/resumes/app_{new_app.id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
-    with open(resume_filename, "w", encoding="utf-8") as f:
-        f.write(f"Candidate ID: {candidate_id}\nJob ID: {new_app.job_id}\nScore: {new_app.ai_score}\n\n{new_app.resume_text}")
-        
-    return new_app
+    db.add(new_app); db.commit(); db.refresh(new_app)
 
-@app.get("/system/download-data")
-def download_data():
-    """Zips the data folder and returns it for persistent off-site backup."""
-    zip_path = "system_backup"
-    shutil.make_archive(zip_path, 'zip', "backend/data")
-    return FileResponse(path=f"{zip_path}.zip", filename=f"Nukhba_Backup_{datetime.now().strftime('%Y%m%d')}.zip", media_type='application/zip')
+    # Save resume text
+    os.makedirs("backend/data/resumes", exist_ok=True)
+    fname = f"backend/data/resumes/app_{new_app.id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
+    with open(fname, "w", encoding="utf-8") as f:
+        f.write(f"Candidate: {candidate_id}\nJob: {new_app.job_id}\nScore: {new_app.ai_score}\n\n{new_app.resume_text}")
+
+    return new_app
 
 @app.get("/applications/{job_id}", response_model=List[schemas.ApplicationResponse])
 def get_applications_for_job(job_id: int, db: Session = Depends(get_db)):
@@ -251,49 +268,72 @@ def update_application_status(app_id: int, status: str, db: Session = Depends(ge
     db.commit()
     return {"message": "Status updated successfully"}
 
-# --- SYSTEM ENDPOINTS ---
+# ─── SYSTEM ENDPOINTS ─────────────────────────────────────────────────────────
 @app.post("/system/seed")
 def seed_database(db: Session = Depends(get_db)):
-    # Create HR User
-    hr = db.query(models.User).filter(models.User.email == "hr@example.com").first()
-    if not hr:
-        hr = models.User(name="HR Manager", email="hr@example.com", password=get_password_hash("password123"), role="HR", country="United Arab Emirates 🇦🇪", phone="+971 50 123 4567")
-        db.add(hr)
-        db.commit()
-        db.refresh(hr)
-    
-    # Create Candidate
-    candidate = db.query(models.User).filter(models.User.email == "candidate@example.com").first()
-    if not candidate:
-        candidate = models.User(name="John Doe", email="candidate@example.com", password=get_password_hash("password123"), role="Candidate", country="United Arab Emirates 🇦🇪", phone="+971 50 765 4321")
-        db.add(candidate)
-        db.commit()
-        db.refresh(candidate)
+    return _seed_database(db)
 
-    # Add Sample Jobs
-    jobs_data = [
-        {
-            "title": "Senior Software Engineer",
-            "description": "We are looking for a backend pro to join our fintech scaling team.",
-            "requirements": "Python, FastAPI, SQLAlchemy, PostgreSQL, Docker, AWS"
-        },
-        {
-            "title": "Product Designer",
-            "description": "Design the future of AI interfaces with our creative team.",
-            "requirements": "Figma, UI/UX, Design Systems, Prototyping, Adobe Creative Suite"
-        },
-        {
-            "title": "Data Scientist",
-            "description": "Leverage LLMs and data to build smart recruitment features.",
-            "requirements": "Python, PyTorch, Transformers, NLP, Statistics, Pandas"
-        }
+@app.get("/system/download-data")
+def download_data():
+    zip_path = "system_backup"
+    shutil.make_archive(zip_path, "zip", "backend/data")
+    return FileResponse(
+        path=f"{zip_path}.zip",
+        filename=f"Nukhba_Backup_{datetime.now().strftime('%Y%m%d')}.zip",
+        media_type="application/zip",
+    )
+
+# ─── INTERNAL HELPERS ─────────────────────────────────────────────────────────
+def _append_json(path: str, record: dict):
+    """Safely appends a record to a JSON array file."""
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    data = []
+    if os.path.exists(path):
+        try:
+            with open(path, "r") as f:
+                data = json.load(f)
+        except Exception:
+            data = []
+    data.append(record)
+    with open(path, "w") as f:
+        json.dump(data, f, indent=2)
+
+def _seed_database(db: Session):
+    """Seeds demo users and jobs. Safe to call multiple times."""
+    # HR user
+    if not db.query(models.User).filter(models.User.email == "hr@example.com").first():
+        db.add(models.User(
+            name="HR Manager", email="hr@example.com",
+            password=get_password_hash("password123"), role="HR",
+            country="United Arab Emirates 🇦🇪", phone="+971 50 123 4567",
+        ))
+        db.commit()
+
+    # Candidate user
+    if not db.query(models.User).filter(models.User.email == "candidate@example.com").first():
+        db.add(models.User(
+            name="John Doe", email="candidate@example.com",
+            password=get_password_hash("password123"), role="Candidate",
+            country="United Arab Emirates 🇦🇪", phone="+971 50 765 4321",
+        ))
+        db.commit()
+
+    # Sample jobs
+    hr = db.query(models.User).filter(models.User.email == "hr@example.com").first()
+    sample_jobs = [
+        {"title": "Senior Software Engineer",
+         "description": "We are looking for a backend pro to join our fintech scaling team.",
+         "requirements": "Python, FastAPI, SQLAlchemy, PostgreSQL, Docker, AWS"},
+        {"title": "Product Designer",
+         "description": "Design the future of AI interfaces with our creative team.",
+         "requirements": "Figma, UI/UX, Design Systems, Prototyping, Adobe Creative Suite"},
+        {"title": "Data Scientist",
+         "description": "Leverage LLMs and data to build smart recruitment features.",
+         "requirements": "Python, PyTorch, Transformers, NLP, Statistics, Pandas"},
     ]
-    
-    for j in jobs_data:
-        existing = db.query(models.Job).filter(models.Job.title == j['title']).first()
-        if not existing:
-            new_job = models.Job(**j, hr_id=hr.id, status="Open")
-            db.add(new_job)
-    
+    for j in sample_jobs:
+        if not db.query(models.Job).filter(models.Job.title == j["title"]).first():
+            db.add(models.Job(**j, hr_id=hr.id, status="Open"))
     db.commit()
-    return {"message": "Database seeded with sample data!"}
+
+    return {"message": "Database seeded successfully"}
