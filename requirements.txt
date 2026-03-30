@@ -6,6 +6,7 @@ python-multipart
 bcrypt
 google-auth
 pymupdf
+psycopg2-binary
 requests
 pandas
 streamlit
