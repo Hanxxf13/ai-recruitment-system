@@ -432,14 +432,17 @@ def get_applications_for_job(job_id: int, db: Session = Depends(get_db)):
 def get_candidate_applications(candidate_id: int, db: Session = Depends(get_db)):
     return db.query(models.Application).filter(models.Application.candidate_id == candidate_id).all()
 
-@app.put("/applications/{app_id}/status")
-def update_application_status(app_id: int, status: str, db: Session = Depends(get_db)):
+@app.put("/applications/{app_id}/update")
+def update_application(app_id: int, status: Optional[str] = None, ai_score: Optional[float] = None, db: Session = Depends(get_db)):
     application = db.query(models.Application).filter(models.Application.id == app_id).first()
     if not application:
         raise HTTPException(status_code=404, detail="Application not found")
-    application.status = status
+    if status is not None:
+        application.status = status
+    if ai_score is not None:
+        application.ai_score = ai_score
     db.commit()
-    return {"message": "Status updated successfully"}
+    return {"message": "Application updated successfully"}
 
 # ─── SYSTEM ENDPOINTS ─────────────────────────────────────────────────────────
 @app.post("/system/seed")

@@ -661,12 +661,22 @@ def show_hr_dashboard(user):
                             ) if a.get('status') in ["Screened","Shortlisted","Interview","Rejected","Hired"] else 0,
                             key=f"status_{a['id']}"
                         )
+                        new_score = st.number_input(
+                            "Adjust AI Score (%)",
+                            min_value=0.0,
+                            max_value=100.0,
+                            value=float(score) if score is not None else 0.0,
+                            step=1.0,
+                            key=f"score_{a['id']}"
+                        )
                         if st.button("💾 Save", key=f"save_{a['id']}"):
-                            r = call("PUT", f"/applications/{a['id']}/status",
-                                     params={"status": new_status})
+                            r = call("PUT", f"/applications/{a['id']}/update",
+                                     params={"status": new_status, "ai_score": new_score})
                             if r is not None:
-                                st.success("Status updated!")
+                                st.success("Application updated!")
                                 st.cache_data.clear()
+                                time.sleep(0.5)
+                                st.rerun()
 
     # ────────────────── POST JOB ──────────────────
     elif sec == "post_job":
