@@ -321,14 +321,19 @@
       <tr>
         <td>Candidate #${a.candidate_id}</td>
         <td>${a._job?.title||'—'}</td>
-        <td><span class="badge ${scoreColor(a.ai_score)}">${a.ai_score?.toFixed(1)||'—'}%</span></td>
+        <td>
+          <input type="number" id="score-${a.id}" class="status-select" style="width:70px" value="${a.ai_score != null ? Math.round(a.ai_score) : 0}" step="1" min="0" max="100" />
+        </td>
         <td style="max-width:220px;font-size:.8rem;color:var(--text-dim)">${(a.ai_feedback||'').substring(0,80)}…</td>
         <td>
-          <select class="status-select" onchange="updateStatus(${a.id},this.value)">
+          <select id="status-${a.id}" class="status-select">
             ${['Screened','Shortlisted','Interview','Rejected','Hired'].map(s=>`<option ${a.status===s?'selected':''}>${s}</option>`).join('')}
           </select>
         </td>
-        <td><button class="btn btn-ghost" style="width:auto;padding:6px 12px;font-size:.78rem" onclick="viewApp(${a.id})">Detail</button></td>
+        <td>
+          <button class="btn btn-ghost" style="width:auto;padding:6px 12px;font-size:.78rem; border: 1px solid var(--gold)" onclick="updateApplication(${a.id})">Save</button>
+          <button class="btn btn-ghost" style="width:auto;padding:6px 12px;font-size:.78rem" onclick="viewApp(${a.id})">Detail</button>
+        </td>
       </tr>`).join('');
   }
 
@@ -358,11 +363,15 @@
     if (e.target === document.getElementById('app-modal')) closeModal();
   });
 
-  async function updateStatus(appId, status) {
+  async function updateApplication(appId) {
+    const status = document.getElementById(`status-${appId}`).value;
+    const scoreVal = document.getElementById(`score-${appId}`).value;
+    const score = scoreVal ? parseFloat(scoreVal) : 0;
     try {
-      await api('PUT', `/applications/${appId}/status`, null, { status });
-      showToast(`Status updated to "${status}"`, 'success');
-    } catch(e) { showToast('Failed to update status', 'error'); }
+      await api('PUT', `/applications/${appId}/update`, null, { status, ai_score: score });
+      showToast('Application updated', 'success');
+      await loadDashboard();
+    } catch(e) { showToast('Failed to update application', 'error'); }
   }
 
   async function postJob() {
