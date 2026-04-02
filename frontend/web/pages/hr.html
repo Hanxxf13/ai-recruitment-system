@@ -3,221 +3,162 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Nukhba — HR Command Center</title>
+  <title>Nukhba HUD — Command Center</title>
   <link rel="stylesheet" href="/web/css/style.css" />
   <style>
-    .section { animation: sectionFade 0.4s ease both; }
-    @keyframes sectionFade {
-      from { opacity:0; transform: translateY(12px); }
-      to   { opacity:1; transform: translateY(0); }
-    }
+    /* Section transitions */
+    .section { animation: sectionFade 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    @keyframes sectionFade { from { opacity:0; transform: translateY(20px) scale(0.98); } to { opacity:1; transform: translateY(0) scale(1); } }
+    
+    /* Modals with glass backdrop */
     .modal-overlay {
-      position: fixed; inset: 0;
-      background: rgba(0,0,0,0.75);
-      z-index: 500;
-      display: flex; align-items: center; justify-content: center;
-      padding: 20px;
+      position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(12px);
+      z-index: 500; display: flex; align-items: center; justify-content: center; padding: 20px;
     }
     .modal {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 36px;
-      width: 100%;
-      max-width: 520px;
-      position: relative;
-      animation: sectionFade 0.3s ease both;
+      background: var(--card); border: 1px solid var(--border); border-top: 1px solid rgba(255,255,255,0.15);
+      border-radius: var(--radius-lg); padding: 40px; width: 100%; max-width: 580px; position: relative;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.8), inset 0 0 40px rgba(212,175,55,0.05);
+      animation: modalDrop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
     }
+    @keyframes modalDrop { from{opacity:0;transform:translateY(-40px) scale(0.9);} to{opacity:1;transform:translateY(0) scale(1);} }
     .modal-close {
-      position: absolute; top: 16px; right: 16px;
-      background: none; border: none;
-      color: var(--text-dim); font-size: 1.3rem; cursor: pointer;
+      position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+      color: var(--text-dim); width: 32px; height: 32px; border-radius: 50%; display:flex;align-items:center;justify-content:center;
+      font-size: 1rem; cursor: pointer; transition: all 0.2s;
     }
-    .modal-close:hover { color: var(--text); }
-    .modal-title {
-      font-family: 'Playfair Display', serif;
-      font-size: 1.4rem;
-      font-weight: 700;
-      margin-bottom: 20px;
-      color: var(--gold);
-    }
-    .ai-score-ring {
-      width: 90px; height: 90px;
-      border-radius: 50%;
-      border: 4px solid var(--gold);
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      box-shadow: 0 0 20px var(--gold-glow);
-      margin: 0 auto 16px;
-    }
-    .ai-score-ring .score-num {
-      font-size: 1.8rem; font-weight: 900; color: var(--gold); line-height: 1;
-    }
-    .ai-score-ring .score-lbl {
-      font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;
-    }
-    .empty-state {
-      text-align: center; padding: 60px 20px;
-      color: var(--text-muted);
-    }
-    .empty-state .empty-icon { font-size: 3rem; margin-bottom: 12px; }
-    .empty-state p { font-size: 0.9rem; }
-    .status-select {
-      padding: 5px 10px;
-      background: var(--card2);
-      border: 1px solid var(--border2);
-      border-radius: 8px;
-      color: var(--text);
-      font-size: 0.82rem;
-      outline: none;
-      cursor: pointer;
-    }
-    .status-select:focus { border-color: var(--gold); }
-    .tab-content { display: none; }
-    .tab-content.active { display: block; }
-    /* Dashboard tabs */
-    .dash-tabs {
-      display: flex;
-      gap: 2px;
-      border-bottom: 1px solid var(--border2);
-      margin-bottom: 28px;
-    }
-    .dash-tab {
-      padding: 12px 20px;
-      font-size: 0.88rem;
-      font-weight: 600;
-      color: var(--text-dim);
-      cursor: pointer;
-      border-bottom: 2px solid transparent;
-      transition: all var(--transition);
-      margin-bottom: -1px;
-    }
-    .dash-tab:hover  { color: var(--text); }
-    .dash-tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+    .modal-close:hover { background: rgba(255,51,102,0.2); color: var(--danger); border-color: var(--danger); }
+    
+    .modal-title { font-family: var(--font-head); font-size: 1.6rem; font-weight: 700; color: #fff; margin-bottom: 24px; }
   </style>
 </head>
 <body>
 
-<!-- ════════════════════ TOPBAR ════════════════════ -->
+<!-- ════════════ TOPBAR ════════════ -->
 <nav class="topbar">
   <div class="topbar-brand">
     <span class="topbar-logo">نخبة</span>
-    <span class="topbar-sub">HR Command Center</span>
+    <span class="topbar-sub">COMMAND_CENTER</span>
   </div>
   <div class="topbar-right" id="topbar-user"></div>
 </nav>
 
-<!-- ════════════════════ SHELL ════════════════════ -->
+<!-- ════════════ SHELL ════════════ -->
 <div class="page-shell">
 
-  <!-- Sidebar -->
-  <aside class="sidebar">
-    <div class="sidebar-label">Main</div>
+  <!-- Floating Dock -->
+  <aside class="sidebar-dock">
+    <div class="sidebar-label">Main Core</div>
     <div class="sidebar-item active" onclick="showSection('overview')">
-      <span class="icon">📊</span> Overview
+      <span class="icon">▤</span> Global Overview
     </div>
     <div class="sidebar-item" onclick="showSection('jobs')">
-      <span class="icon">💼</span> Job Postings
+      <span class="icon">◱</span> Active Postings
     </div>
     <div class="sidebar-item" onclick="showSection('applications')">
-      <span class="icon">📋</span> Applications
+      <span class="icon">▣</span> Applicant Data
     </div>
-    <div class="sidebar-label" style="margin-top:12px">Tools</div>
+    <div class="sidebar-label" style="margin-top:20px">Operations</div>
     <div class="sidebar-item" onclick="showSection('post-job')">
-      <span class="icon">➕</span> Post New Job
+      <span class="icon">╪</span> Deploy New Listing
     </div>
   </aside>
 
-  <!-- Main -->
   <main class="main-content">
 
     <!-- ──── OVERVIEW ──── -->
     <section id="sec-overview" class="section">
-      <div class="page-title">HR Command Center</div>
-      <div class="page-subtitle">Monitor performance, manage applications and build your elite team.</div>
+      <div class="page-title">System Status</div>
+      <div class="page-subtitle">Real-time metrics and intelligence overview. AI modules active.</div>
 
       <div class="metrics-grid" id="metrics-grid">
-        <div class="metric-card">
-          <div class="metric-icon">💼</div>
-          <div class="metric-value" id="m-jobs">—</div>
-          <div class="metric-label">Active Jobs</div>
+        <div class="bento-card">
+          <div class="bento-icon text-dim">◱</div>
+          <div class="bento-value" id="m-jobs">--</div>
+          <div class="bento-label">Active Postings</div>
         </div>
-        <div class="metric-card">
-          <div class="metric-icon">📋</div>
-          <div class="metric-value" id="m-apps">—</div>
-          <div class="metric-label">Total Applications</div>
+        <div class="bento-card">
+          <div class="bento-icon text-dim">▣</div>
+          <div class="bento-value" id="m-apps">--</div>
+          <div class="bento-label">Registered Candidates</div>
         </div>
-        <div class="metric-card">
-          <div class="metric-icon">🤖</div>
-          <div class="metric-value" id="m-avg">—</div>
-          <div class="metric-label">Avg AI Score</div>
+        <div class="bento-card">
+          <div class="bento-icon" style="color:var(--success)">◈</div>
+          <div class="bento-value" id="m-avg" style="color:var(--success);text-shadow:0 0 20px var(--success-glow)">--</div>
+          <div class="bento-label">Network Avg AI Fit</div>
         </div>
-        <div class="metric-card">
-          <div class="metric-icon">✅</div>
-          <div class="metric-value" id="m-shortlisted">—</div>
-          <div class="metric-label">Shortlisted</div>
+        <div class="bento-card">
+          <div class="bento-icon text-dim">◬</div>
+          <div class="bento-value" id="m-shortlisted">--</div>
+          <div class="bento-label">Shortlisted Users</div>
         </div>
       </div>
 
       <!-- Recent Applications -->
-      <div class="card" style="margin-top:8px">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
-          <h3 style="font-size:1rem;font-weight:700;color:var(--gold)">Recent Applications</h3>
-          <button class="btn btn-ghost" style="width:auto;padding:8px 16px;font-size:0.82rem" onclick="showSection('applications')">View All →</button>
+      <div class="card" style="margin-top:20px; padding:0; background:rgba(15,15,20,0.4)">
+        <div style="padding:24px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
+          <h3 style="font-family:var(--font-mono);font-size:0.9rem;text-transform:uppercase;color:var(--gold);letter-spacing:1px">Latest Processed Profiles</h3>
+          <button class="btn btn-ghost" style="padding:6px 12px;font-size:0.75rem" onclick="showSection('applications')">EXPAND_ALL</button>
         </div>
-        <div class="table-wrap"><table class="data-table" id="tbl-recent">
-          <thead><tr>
-            <th>Candidate</th><th>Job</th><th>AI Score</th><th>Status</th><th>Action</th>
-          </tr></thead>
-          <tbody id="tbody-recent"><tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:40px">Loading…</td></tr></tbody>
-        </table></div>
+        <div class="table-wrap" style="border:none; border-radius:0 0 var(--radius-lg) var(--radius-lg);">
+          <table class="data-table" id="tbl-recent">
+            <thead><tr>
+              <th>Entity ID</th><th>Target Role</th><th>AI Fit Protocol</th><th>Node Status</th><th>Action</th>
+            </tr></thead>
+            <tbody id="tbody-recent"><tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:40px">INITIALIZING DATA STREAMS...</td></tr></tbody>
+          </table>
+        </div>
       </div>
     </section>
 
     <!-- ──── JOB POSTINGS ──── -->
     <section id="sec-jobs" class="section hidden">
-      <div class="page-title">Job Postings</div>
-      <div class="page-subtitle">All active and closed positions.</div>
+      <div class="page-title">Active Deployments</div>
+      <div class="page-subtitle">Track and manage open role requisitions.</div>
 
-      <div id="jobs-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px;margin-top:4px">
-        <div class="metric-card" style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-muted)">Loading…</div>
+      <div id="jobs-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:24px;margin-top:16px">
+        <div class="card" style="grid-column:1/-1;text-align:center;padding:60px;color:var(--text-muted)">CONNECTING...</div>
       </div>
     </section>
 
     <!-- ──── ALL APPLICATIONS ──── -->
     <section id="sec-applications" class="section hidden">
-      <div class="page-title">All Applications</div>
-      <div class="page-subtitle">AI-screened submissions across all jobs.</div>
+      <div class="page-title">Global Applicant Registry</div>
+      <div class="page-subtitle">Cross-referenced database of all candidates against open roles.</div>
 
-      <div class="card" style="margin-top:4px">
-        <div class="table-wrap"><table class="data-table">
-          <thead><tr>
-            <th>Candidate</th><th>Job</th><th>AI Score</th><th>AI Feedback</th><th>Status</th><th>Action</th>
-          </tr></thead>
-          <tbody id="tbody-all"><tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:40px">Loading…</td></tr></tbody>
-        </table></div>
+      <div class="card" style="padding:0; margin-top:16px; background:rgba(0,0,0,0.3)">
+        <div class="table-wrap" style="border:none; border-radius:var(--radius-lg)">
+          <table class="data-table">
+            <thead><tr>
+              <th>Subject</th><th>Requisition</th><th>AI Score</th><th>Diagnostic Snippet</th><th>State</th><th>Override</th>
+            </tr></thead>
+            <tbody id="tbody-all"><tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:40px">SCANNING NETWORK...</td></tr></tbody>
+          </table>
+        </div>
       </div>
     </section>
 
     <!-- ──── POST JOB ──── -->
     <section id="sec-post-job" class="section hidden">
-      <div class="page-title">Post a New Job</div>
-      <div class="page-subtitle">Create a new position and let AI match the best candidates.</div>
+      <div class="page-title">Deploy Requisition</div>
+      <div class="page-subtitle">Initialize a new role parameter block for AI candidate matching.</div>
 
-      <div class="card" style="max-width:600px;margin-top:4px">
+      <div class="card" style="max-width:640px;margin-top:16px">
         <div class="form-group">
-          <label>Job Title</label>
-          <input type="text" id="job-title" placeholder="e.g. Senior Software Engineer" />
+          <label>Role Designation (Title)</label>
+          <input type="text" id="job-title" placeholder="e.g. Lead Neural Architect" />
         </div>
         <div class="form-group">
-          <label>Description</label>
-          <textarea id="job-desc" placeholder="Describe the role and responsibilities…"></textarea>
+          <label>Objectives (Description)</label>
+          <textarea id="job-desc" placeholder="Define mission parameters..."></textarea>
         </div>
         <div class="form-group">
-          <label>Key Requirements <span style="color:var(--text-muted);font-weight:400;text-transform:none">(comma separated)</span></label>
-          <textarea id="job-reqs" placeholder="Python, FastAPI, 3+ years experience…" style="min-height:80px"></textarea>
+          <label>Vector Requirements <span style="font-family:var(--font-body);text-transform:none;opacity:0.5">(comma separated constraints)</span></label>
+          <textarea id="job-reqs" placeholder="Python, TensorFlow, Level 4 Clearance..." style="min-height:80px"></textarea>
         </div>
-        <button class="btn btn-primary" id="btn-post-job" onclick="postJob()">🚀 Post Job</button>
+        <div style="margin-top:30px">
+           <button class="btn btn-primary" style="width:100%" id="btn-post-job" onclick="postJob()">INITIALIZE REQUISITION <span style="font-family:var(--font-mono)">_&gt;</span></button>
+        </div>
       </div>
     </section>
 
@@ -228,7 +169,7 @@
 <div class="modal-overlay hidden" id="app-modal">
   <div class="modal">
     <button class="modal-close" onclick="closeModal()">✕</button>
-    <div class="modal-title" id="modal-title">Application Detail</div>
+    <div class="modal-title" id="modal-title">Subject Diagnostics</div>
     <div id="modal-body"></div>
   </div>
 </div>
@@ -253,9 +194,7 @@
         apps.forEach(a => { a._job = j; });
         allApplications.push(...apps);
       }
-    } catch(e) {
-      showToast('Could not reach the backend API', 'error');
-    }
+    } catch(e) { showToast('ERR: Connection reset by peer', 'error'); }
     renderMetrics();
     renderRecentApps();
     renderJobsGrid();
@@ -263,13 +202,13 @@
   }
 
   function renderMetrics() {
-    document.getElementById('m-jobs').textContent = allJobs.filter(j=>j.status==='Open').length;
-    document.getElementById('m-apps').textContent = allApplications.length;
+    document.getElementById('m-jobs').textContent = allJobs.filter(j=>j.status==='Open').length.toString().padStart(2, '0');
+    document.getElementById('m-apps').textContent = allApplications.length.toString().padStart(3, '0');
     const scores = allApplications.map(a=>a.ai_score).filter(s=>s!=null);
     document.getElementById('m-avg').textContent = scores.length
-      ? (scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(1)+'%' : '—';
+      ? (scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(1)+'%' : 'N/A';
     document.getElementById('m-shortlisted').textContent =
-      allApplications.filter(a=>a.status==='Shortlisted'||a.status==='Screened').length;
+      allApplications.filter(a=>a.status==='Shortlisted'||a.status==='Screened').length.toString().padStart(2,'0');
   }
 
   function scoreColor(s) {
@@ -281,83 +220,96 @@
   function renderRecentApps() {
     const tbody = document.getElementById('tbody-recent');
     const slice = allApplications.slice(-6).reverse();
-    if (!slice.length) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:40px">No applications yet.</td></tr>'; return; }
+    if (!slice.length) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:40px">NO_DATA_FOUND</td></tr>'; return; }
     tbody.innerHTML = slice.map(a => `
       <tr>
-        <td><strong>Candidate #${a.candidate_id}</strong></td>
-        <td>${a._job?.title||'—'}</td>
-        <td><span class="badge ${scoreColor(a.ai_score)}">${a.ai_score?.toFixed(1)||'—'}%</span></td>
+        <td class="font-mono">SUBJ_${a.candidate_id.toString().padStart(3,'0')}</td>
+        <td>${a._job?.title||'DELETED_ROLE'}</td>
+        <td class="font-mono"><span class="badge ${scoreColor(a.ai_score)}">${a.ai_score?.toFixed(1)||'--'}%</span></td>
         <td><span class="badge badge-dim">${a.status}</span></td>
-        <td><button class="btn btn-ghost" style="width:auto;padding:6px 12px;font-size:.78rem" onclick="viewApp(${a.id})">Review</button></td>
+        <td><button class="btn btn-ghost" style="padding:6px 12px;font-size:0.7rem;font-family:var(--font-mono)" onclick="viewApp(${a.id})">DECRYPT</button></td>
       </tr>`).join('');
   }
 
   function renderJobsGrid() {
     const grid = document.getElementById('jobs-grid');
-    if (!allJobs.length) {
-      grid.innerHTML = '<div class="metric-card" style="grid-column:1/-1;text-align:center;padding:60px;color:var(--text-muted)"><div style="font-size:3rem">💼</div><p>No jobs posted yet.</p></div>';
-      return;
-    }
+    if (!allJobs.length) { grid.innerHTML = '<div class="card" style="grid-column:1/-1;text-align:center;padding:60px;color:var(--text-muted)">0_REQUISITIONS_ACTIVE</div>'; return; }
     grid.innerHTML = allJobs.map(j => `
       <div class="card">
-        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">
-          <h3 style="font-size:1rem;font-weight:700;line-height:1.3">${j.title}</h3>
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:12px">
+          <h3 style="font-family:var(--font-body);font-size:1.1rem;font-weight:700;line-height:1.2;color:#fff">${j.title}</h3>
           <span class="badge ${j.status==='Open'?'badge-green':'badge-dim'}">${j.status}</span>
         </div>
-        <p style="font-size:.85rem;color:var(--text-dim);margin:10px 0 16px;line-height:1.6">${j.description}</p>
-        <div style="font-size:.78rem;color:var(--gold-dark);margin-bottom:14px;font-weight:600">${j.requirements}</div>
-        <button class="btn btn-ghost" style="width:auto;padding:8px 16px;font-size:.82rem"
-          onclick="showSection('applications')">View Applications →</button>
+        <div class="font-mono" style="font-size:0.65rem;color:var(--text-dim);margin-bottom:16px">REQ_ID: ${j.id.toString().padStart(4,'0')}</div>
+        <p style="font-size:0.85rem;color:var(--text-dim);margin:0 0 20px;line-height:1.6;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden">${j.description}</p>
+        <div style="padding:12px;background:rgba(212,175,55,0.05);border-radius:var(--radius-sm);border:1px solid rgba(212,175,55,0.1);margin-bottom:20px">
+          <div class="font-mono" style="font-size:0.6rem;color:var(--gold);margin-bottom:4px">REQUIREMENTS_VECTOR</div>
+          <div style="font-size:0.78rem;color:var(--text)">${j.requirements}</div>
+        </div>
+        <button class="btn btn-ghost w-full" style="font-family:var(--font-mono);font-size:0.75rem" onclick="showSection('applications')">TRACE_SUBJECTS</button>
       </div>`).join('');
   }
 
   function renderAllApps() {
     const tbody = document.getElementById('tbody-all');
-    if (!allApplications.length) {
-      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:60px">No applications yet.</td></tr>';
-      return;
-    }
+    if (!allApplications.length) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:40px">NO_DATA_FOUND</td></tr>'; return; }
     tbody.innerHTML = allApplications.map((a,i) => `
       <tr>
-        <td>Candidate #${a.candidate_id}</td>
-        <td>${a._job?.title||'—'}</td>
+        <td class="font-mono text-gold">SUBJ_${a.candidate_id.toString().padStart(3,'0')}</td>
+        <td style="color:#fff">${a._job?.title||'DELETED_ROLE'}</td>
         <td>
-          <input type="number" id="score-${a.id}" class="status-select" style="width:70px" value="${a.ai_score != null ? Math.round(a.ai_score) : 0}" step="1" min="0" max="100" />
+          <input type="number" id="score-${a.id}" class="status-select font-mono" style="width:70px;background:rgba(0,0,0,0.6);border-color:rgba(212,175,55,0.3);color:var(--gold)" value="${a.ai_score != null ? Math.round(a.ai_score) : 0}" step="1" min="0" max="100" />
         </td>
-        <td style="max-width:220px;font-size:.8rem;color:var(--text-dim)">${(a.ai_feedback||'').substring(0,80)}…</td>
+        <td style="max-width:260px;font-size:0.8rem;color:var(--text-dim);line-height:1.4"><div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${(a.ai_feedback||'PENDING')}</div></td>
         <td>
-          <select id="status-${a.id}" class="status-select">
+          <select id="status-${a.id}" class="status-select font-mono" style="font-size:0.7rem;text-transform:uppercase">
             ${['Screened','Shortlisted','Interview','Rejected','Hired'].map(s=>`<option ${a.status===s?'selected':''}>${s}</option>`).join('')}
           </select>
         </td>
         <td>
-          <button class="btn btn-ghost" style="width:auto;padding:6px 12px;font-size:.78rem; border: 1px solid var(--gold)" onclick="updateApplication(${a.id})">Save</button>
-          <button class="btn btn-ghost" style="width:auto;padding:6px 12px;font-size:.78rem" onclick="viewApp(${a.id})">Detail</button>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-primary" style="padding:6px 12px;font-size:0.7rem" onclick="updateApplication(${a.id})">WRITE</button>
+            <button class="btn btn-ghost" style="padding:6px 12px;font-size:0.7rem" onclick="viewApp(${a.id})">READ</button>
+          </div>
         </td>
       </tr>`).join('');
   }
 
   function viewApp(appId) {
     const a = allApplications.find(x => x.id === appId);
-    document.getElementById('modal-title').textContent = `${a._job?.title || 'Application'} — Review`;
+    document.getElementById('modal-title').innerHTML = `Diagnostics <span class="text-dim">/ SUBJ_${a.candidate_id.toString().padStart(3,'0')}</span>`;
+    
+    // Dynamic ring fill logic
+    const sc = a.ai_score || 0;
+    const clr = sc >= 75 ? 'var(--success)' : (sc >= 50 ? 'var(--gold)' : 'var(--danger)');
+    const grad = `conic-gradient(${clr} ${sc}%, rgba(255,255,255,0.05) 0)`;
+
     document.getElementById('modal-body').innerHTML = `
-      <div class="ai-score-ring">
-        <div class="score-num">${a.ai_score?.toFixed(0)||'—'}</div>
-        <div class="score-lbl">AI Score</div>
+      <div class="ai-score-container" style="margin-bottom:24px">
+        <div class="ai-score-ring" style="background:${grad}; box-shadow: 0 0 20px ${clr}33">
+          <div class="score-num" style="color:${clr}; text-shadow: 0 0 15px ${clr}">${sc.toFixed(0)}</div>
+        </div>
+        <div class="score-lbl" style="color:${clr}">MATCH_COEFFICIENT</div>
       </div>
-      <p style="font-size:.82rem;color:var(--text-dim);text-align:center;margin-bottom:20px">
-        Candidate #${a.candidate_id} · <span class="badge badge-dim">${a.status}</span>
-      </p>
-      <div class="card" style="margin-bottom:16px">
-        <div style="font-size:.78rem;text-transform:uppercase;letter-spacing:1px;color:var(--gold);margin-bottom:8px">AI Feedback</div>
-        <p style="font-size:.88rem;line-height:1.6;color:var(--text)">${a.ai_feedback||'No feedback.'}</p>
+      
+      <div style="display:flex;justify-content:center;gap:12px;margin-bottom:30px">
+         <span class="badge badge-dim" style="border-color:rgba(255,255,255,0.1)">STATE: ${a.status.toUpperCase()}</span>
+         <span class="badge" style="background:rgba(212,175,55,0.05);color:var(--text-dim);border:1px solid rgba(212,175,55,0.2)">REQ: ${a._job?.id||'0'}</span>
       </div>
-      <div class="card">
-        <div style="font-size:.78rem;text-transform:uppercase;letter-spacing:1px;color:var(--gold);margin-bottom:8px">Resume Extract</div>
-        <p style="font-size:.82rem;line-height:1.6;color:var(--text-dim);max-height:200px;overflow-y:auto">${a.resume_text||'—'}</p>
-      </div>`;
+
+      <div class="card" style="background:rgba(0,0,0,0.4);border-color:var(--border);margin-bottom:16px;padding:20px">
+        <div class="font-mono text-gold" style="font-size:0.65rem;margin-bottom:10px">SYSTEM.EVAL() OUTPUT:</div>
+        <p style="font-size:0.85rem;line-height:1.6;color:var(--text)">${a.ai_feedback||'Awaiting telemetry...'}</p>
+      </div>
+      
+      <div class="card" style="background:rgba(0,0,0,0.4);border-color:var(--border);padding:20px">
+        <div class="font-mono text-dim" style="font-size:0.65rem;margin-bottom:10px">RAW_MNEMONIC_DUMP:</div>
+        <p class="font-mono" style="font-size:0.75rem;line-height:1.6;color:var(--text-muted);max-height:180px;overflow-y:auto;white-space:pre-wrap">${a.resume_text||'NO_DATA'}</p>
+      </div>
+    `;
     document.getElementById('app-modal').classList.remove('hidden');
   }
+  
   function closeModal() { document.getElementById('app-modal').classList.add('hidden'); }
   document.getElementById('app-modal').addEventListener('click', e => {
     if (e.target === document.getElementById('app-modal')) closeModal();
@@ -369,9 +321,9 @@
     const score = scoreVal ? parseFloat(scoreVal) : 0;
     try {
       await api('PUT', `/applications/${appId}/update`, null, { status, ai_score: score });
-      showToast('Application updated', 'success');
+      showToast('OVERRIDE_ACCEPTED. Database synchronized.', 'success');
       await loadDashboard();
-    } catch(e) { showToast('Failed to update application', 'error'); }
+    } catch(e) { showToast('ERR: Write operation blocked', 'error'); }
   }
 
   async function postJob() {
@@ -379,24 +331,22 @@
     const title = document.getElementById('job-title').value.trim();
     const desc  = document.getElementById('job-desc').value.trim();
     const reqs  = document.getElementById('job-reqs').value.trim();
-    if (!title||!desc||!reqs) return showToast('Please fill all fields','error');
+    if (!title||!desc||!reqs) return showToast('ERR: Missing parameters in deployment block','error');
     setLoading(btn, true);
     try {
       await api('POST', `/jobs?hr_id=${user.id}`, { title, description:desc, requirements:reqs });
-      showToast('✅ Job posted successfully!','success');
+      showToast('REQUISITION DEPLOYED TO NETWORK','success');
       document.getElementById('job-title').value='';
       document.getElementById('job-desc').value='';
       document.getElementById('job-reqs').value='';
       await loadDashboard();
       showSection('jobs');
-    } catch(e) { showToast(e.message||'Failed to post job','error');
+    } catch(e) { showToast(e.message||'ERR: Network rejection','error');
     } finally { setLoading(btn, false); }
   }
 
   function showSection(name) {
-    ['overview','jobs','applications','post-job'].forEach(s => {
-      document.getElementById(`sec-${s}`).classList.add('hidden');
-    });
+    ['overview','jobs','applications','post-job'].forEach(s => document.getElementById(`sec-${s}`).classList.add('hidden'));
     document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
     document.getElementById(`sec-${name}`).classList.remove('hidden');
     const map = {'overview':0,'jobs':1,'applications':2,'post-job':4};

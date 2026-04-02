@@ -3,448 +3,381 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Nukhba Elite — Sign In</title>
+  <title>Nukhba Elite — HUD Initializing...</title>
   <meta name="description" content="Nukhba Elite Recruitment — the world's most sophisticated talent intelligence platform. Sign in or create your elite account." />
   <link rel="stylesheet" href="/web/css/style.css" />
   <!-- Google Identity Services -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
-    html, body { height: 100%; overflow: hidden; }
-    body { display: flex; }
+    html, body { height: 100%; overflow: hidden; margin: 0; }
+    body { display: flex; align-items: center; justify-content: center; }
 
-    /* ─── LEFT PANEL ─── */
-    .split-left {
-      flex: 1.3;
+    /* Moving matrix data stream in the back */
+    .data-stream {
+      position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+      background: linear-gradient(180deg, transparent 0%, rgba(212,175,55,0.02) 50%, transparent 100%);
+      background-size: 100% 200%;
+      animation: scanline 8s linear infinite;
+      z-index: -1; pointer-events: none;
+    }
+    @keyframes scanline { 0% { background-position: 0% -100%; } 100% { background-position: 0% 200%; } }
+
+    /* Overlays */
+    .viewport-container {
+      display: flex;
+      width: 100%; height: 100vh;
+      max-width: 1800px;
       position: relative;
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-end;
-      padding: 56px 52px;
-      overflow: hidden;
-      background: #080809;
-    }
-    .left-bg {
-      position: absolute;
-      inset: 0;
-      background:
-        radial-gradient(ellipse at 30% 20%, rgba(201,168,76,0.08) 0%, transparent 50%),
-        radial-gradient(ellipse at 70% 80%, rgba(201,168,76,0.05) 0%, transparent 50%),
-        linear-gradient(160deg, #0d0b08 0%, #080809 50%, #060508 100%);
-    }
-    .left-bg::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(135deg,
-        rgba(201,168,76,0.05) 0%, transparent 60%, rgba(201,168,76,0.03) 100%);
-      animation: shimmer 8s ease-in-out infinite alternate;
-    }
-    /* Decorative grid lines */
-    .left-bg::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background-image:
-        linear-gradient(rgba(201,168,76,0.04) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(201,168,76,0.04) 1px, transparent 1px);
-      background-size: 60px 60px;
-      mask-image: radial-gradient(ellipse at center, rgba(0,0,0,0.4), transparent 70%);
-    }
-    @keyframes shimmer {
-      from { opacity: 0.4; }
-      to   { opacity: 1;   }
-    }
-    .left-content { position: relative; z-index: 1; }
-
-    .brand-arabic {
-      font-family: 'Amiri', serif;
-      font-size: 5rem;
-      color: var(--gold);
-      line-height: 1;
-      text-shadow: 0 0 60px rgba(201,168,76,0.4);
-      animation: fadeUp 0.8s ease both;
-    }
-    .brand-en {
-      font-family: 'Playfair Display', serif;
-      font-size: 1.1rem;
-      font-weight: 400;
-      color: var(--text);
-      letter-spacing: 6px;
-      text-transform: uppercase;
-      margin: 10px 0 40px;
-      opacity: 0.6;
-      animation: fadeUp 0.8s 0.1s ease both;
-    }
-    .left-divider {
-      width: 48px;
-      height: 1px;
-      background: var(--gold);
-      margin-bottom: 28px;
-      animation: fadeUp 0.8s 0.2s ease both;
     }
 
-    /* Testimonial */
-    .testimonial {
-      background: rgba(255,255,255,0.03);
-      backdrop-filter: blur(20px);
-      border: 1px solid rgba(255,255,255,0.07);
-      border-radius: 18px;
-      padding: 28px 32px;
-      max-width: 520px;
-      animation: fadeUp 0.8s 0.3s ease both;
-    }
-    .testimonial-quote { font-size: 1.5rem; color: var(--gold); font-family: 'Playfair Display', serif; margin-bottom: 10px; opacity: 0.4; }
-    .testimonial p { font-size: 0.97rem; line-height: 1.75; color: var(--text); font-style: italic; opacity: 0.75; }
-    .testimonial-author { display: flex; align-items: center; gap: 12px; margin-top: 20px; }
-    .author-avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, var(--gold), var(--gold-dark)); display: flex; align-items: center; justify-content: center; font-weight: 900; color: #000; font-size: .85rem; }
-    .author-name  { font-size: 0.88rem; color: var(--gold); font-weight: 700; }
-    .author-title { font-size: 0.78rem; color: var(--text-muted); }
-
-    /* Stats row */
-    .stats-row {
-      display: flex;
-      gap: 28px;
-      margin-top: 36px;
-      animation: fadeUp 0.8s 0.45s ease both;
-    }
-    .stat-item { text-align: left; }
-    .stat-num  { font-size: 1.8rem; font-weight: 900; color: var(--gold); line-height: 1; }
-    .stat-lbl  { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.8px; }
-
-    /* ─── RIGHT PANEL ─── */
-    .split-right {
-      width: 480px;
-      min-width: 420px;
-      background: var(--dark);
+    /* ─── LEFT PANEL (Holographic Core) ─── */
+    .split-left {
+      flex: 1.2;
+      position: relative;
       display: flex;
       flex-direction: column;
       justify-content: center;
-      padding: 48px 44px;
-      overflow-y: auto;
-      border-left: 1px solid var(--border);
+      padding: 0 80px;
+      z-index: 2;
+    }
+    .brand-arabic {
+      font-family: 'Amiri', serif;
+      font-size: 6rem;
+      color: var(--gold);
+      line-height: 1;
+      text-shadow: 0 0 40px var(--gold-glow);
+      animation: glitchIn 1.2s ease forwards;
+    }
+    .brand-en {
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: var(--text);
+      letter-spacing: 8px;
+      text-transform: uppercase;
+      margin: 10px 0 30px;
+      opacity: 0;
+      animation: fadeUp 1s 0.3s ease forwards;
+    }
+    .left-divider {
+      width: 60px; height: 1px;
+      background: var(--gold);
+      box-shadow: 0 0 10px var(--gold);
+      margin-bottom: 40px;
+      transform: scaleX(0); transform-origin: left;
+      animation: growLine 0.8s 0.6s ease forwards;
+    }
+
+    /* Floating Stats HUD */
+    .stats-hud {
+      display: flex;
+      gap: 30px;
+      opacity: 0;
+      animation: fadeUp 1s 0.8s ease forwards;
+    }
+    .stat-box {
+      background: rgba(10,10,12,0.6);
+      backdrop-filter: blur(10px);
+      border-left: 2px solid var(--gold);
+      padding: 16px 20px;
+      border-radius: 0 8px 8px 0;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
       position: relative;
     }
-    .split-right::before {
-      content: '';
-      position: absolute;
-      left: 0; top: 15%; bottom: 15%;
-      width: 1px;
-      background: linear-gradient(to bottom, transparent, rgba(201,168,76,0.5), transparent);
+    .stat-box::before { content: ''; position: absolute; top:0; right:0; width:10px; height:1px; background: rgba(255,255,255,0.2); }
+    .stat-box::after  { content: ''; position: absolute; bottom:0; right:0; width:10px; height:1px; background: rgba(255,255,255,0.2); }
+
+    .stat-num { font-family: var(--font-mono); font-size: 1.8rem; font-weight: 700; color: var(--gold-light); }
+    .stat-lbl { font-size: 0.65rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1.5px; margin-top: 4px; }
+
+    /* ─── RIGHT PANEL (Auth Pod) ─── */
+    .split-right {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      z-index: 2;
+    }
+    
+    .auth-pod {
+      width: 100%;
+      max-width: 480px;
+      background: rgba(13,13,16,0.5);
+      backdrop-filter: blur(40px);
+      -webkit-backdrop-filter: blur(40px);
+      border: 1px solid var(--border);
+      border-top: 1px solid rgba(255,255,255,0.15);
+      border-left: 1px solid rgba(255,255,255,0.05);
+      border-radius: 24px;
+      padding: 48px;
+      box-shadow: var(--shadow), inset 0 0 60px rgba(0,0,0,0.5);
+      position: relative;
+      opacity: 0; transform: translateY(30px) scale(0.98);
+      animation: podEnter 1s 0.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    }
+    .auth-pod::before { /* Corner accent */
+      content:''; position:absolute; top: -1px; left: 40px; width: 60px; height: 1px; background: var(--gold); box-shadow: 0 0 10px var(--gold);
+    }
+    .auth-pod::after { /* Corner accent */
+      content:''; position:absolute; bottom: -1px; right: 40px; width: 60px; height: 1px; background: var(--gold); box-shadow: 0 0 10px var(--gold);
     }
 
-    .form-header { margin-bottom: 28px; animation: fadeUp 0.6s ease both; }
-    .form-logo     { font-family: 'Amiri', serif; font-size: 2.4rem; color: var(--gold); line-height: 1; }
-    .form-logo-sub { font-size: 0.63rem; letter-spacing: 3px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 22px; }
-    .form-title    { font-family: 'Playfair Display', serif; font-size: 1.75rem; font-weight: 700; line-height: 1.2; margin-bottom: 6px; }
-    .form-desc     { font-size: 0.88rem; color: var(--text-dim); }
+    .form-header { margin-bottom: 30px; text-align: center; }
+    .form-title    { font-family: var(--font-head); font-size: 2rem; font-weight: 700; color: #fff; margin-bottom: 6px; }
+    .form-desc     { font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; }
 
-    /* Tab bar */
+    /* Futuristic Tab Bar */
     .tab-bar {
       display: flex;
-      background: var(--card);
+      background: rgba(0,0,0,0.4);
       border-radius: 12px;
       padding: 4px;
-      margin-bottom: 26px;
-      border: 1px solid var(--border2);
+      margin-bottom: 30px;
+      border: 1px solid var(--border);
+      box-shadow: inset 0 2px 10px rgba(0,0,0,0.5);
     }
     .tab {
-      flex: 1; padding: 10px; text-align: center; border-radius: 9px;
-      cursor: pointer; font-size: .85rem; font-weight: 600;
+      flex: 1; padding: 12px; text-align: center; border-radius: 10px;
+      cursor: pointer; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
       color: var(--text-dim); transition: all var(--transition); user-select: none;
     }
     .tab.active {
-      background: linear-gradient(135deg, var(--gold-dark), var(--gold));
-      color: #000;
-      box-shadow: 0 2px 12px var(--gold-glow);
+      background: rgba(212,175,55,0.15);
+      color: var(--gold-light);
+      box-shadow: 0 0 15px var(--gold-glow);
+      border: 1px solid rgba(212,175,55,0.3);
     }
 
     /* Google button container */
-    .google-btn-container {
-      width: 100%;
-      display: flex;
-      justify-content: center;
-      min-height: 44px;
-      margin-bottom: 4px;
-    }
-    .google-btn-container iframe {
-      border-radius: 10px !important;
-    }
-
-    /* Or divider (hidden until Google loads) */
+    .google-btn-container { width: 100%; display: flex; justify-content: center; min-height: 44px; margin-bottom: 4px; }
+    
     .or-divider {
-      display: none; /* shown by JS after Google loads */
-      align-items: center;
-      gap: 14px;
-      margin: 14px 0;
-      color: var(--text-muted);
-      font-size: 0.8rem;
+      display: none; align-items: center; gap: 14px; margin: 20px 0;
+      color: var(--text-muted); font-family: var(--font-mono); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 2px;
     }
-    .or-divider::before, .or-divider::after {
-      content: ''; flex: 1; height: 1px; background: var(--border2);
-    }
+    .or-divider::before, .or-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 
-    /* Password toggle */
     .pwd-wrap { position: relative; }
-    .pwd-wrap input { padding-right: 44px; }
-    .pwd-toggle {
-      position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
-      background: none; border: none; color: var(--text-muted);
-      cursor: pointer; font-size: 1rem; transition: color var(--transition);
-    }
-    .pwd-toggle:hover { color: var(--gold); }
+    .pwd-toggle { position: absolute; right: 14px; top: 18px; background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 1rem; transition: color var(--transition); }
+    .pwd-toggle:hover { color: var(--gold); filter: drop-shadow(0 0 8px var(--gold)); }
 
-    /* Strength bar */
+    /* Strength bar HUD style */
     .strength-bar { display: flex; gap: 4px; margin-top: 8px; }
-    .strength-seg { flex: 1; height: 3px; border-radius: 2px; background: var(--border2); transition: background 0.3s; }
-    .strength-text { font-size: 0.74rem; color: var(--text-muted); margin-top: 4px; }
+    .strength-seg { flex: 1; height: 2px; background: var(--border); transition: background 0.3s, box-shadow 0.3s; }
+    .strength-text { font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-muted); margin-top: 6px; text-align: right; text-transform: uppercase; }
 
     /* 2-col grid */
-    .form-cols-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-
-    /* Demo hint */
-    .demo-hint {
-      text-align: center; margin-top: 18px; padding: 10px 14px;
-      background: rgba(201,168,76,0.04);
-      border: 1px dashed rgba(201,168,76,0.2);
-      border-radius: 10px; font-size: 0.78rem; color: var(--text-muted);
-    }
-    .demo-hint code { color: var(--gold); background: none; font-size: inherit; }
+    .form-cols-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 
     /* Animations */
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(20px); }
-      to   { opacity: 1; transform: translateY(0); }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes growLine { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+    @keyframes podEnter { from { opacity: 0; transform: translateY(40px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+    @keyframes glitchIn {
+      0% { opacity:0; transform: translateX(-10px); }
+      20% { opacity:1; transform: translateX(5px); }
+      40% { opacity:0.8; transform: translateX(-2px); }
+      100% { opacity:1; transform: translateX(0); }
     }
-    .panel-enter { animation: fadeUp 0.35s ease both; }
+    .panel-enter { animation: fadeUp 0.4s ease forwards; }
 
-    /* Page loader */
+    /* Matrix Loader Overlay */
     #page-loader {
       position: fixed; inset: 0; background: var(--obsidian);
       z-index: 9999; display: flex; align-items: center; justify-content: center;
-      flex-direction: column; gap: 20px; transition: opacity 0.5s;
+      flex-direction: column; gap: 30px; transition: opacity 0.8s;
     }
-    .loader-logo { font-family: 'Amiri', serif; font-size: 4rem; color: var(--gold); animation: pulse 1.5s ease-in-out infinite; }
-    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
-    .loader-bar { width: 120px; height: 2px; background: var(--border2); border-radius: 2px; overflow: hidden; }
-    .loader-bar-fill { height: 100%; background: linear-gradient(to right, var(--gold-dark), var(--gold)); animation: load 1.2s ease both; }
-    @keyframes load { from { width: 0; } to { width: 100%; } }
+    .loader-ring {
+      width: 120px; height: 120px;
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 50%;
+      border-top: 2px solid var(--gold);
+      animation: spin 1s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
+    }
+    .loader-text {
+      font-family: var(--font-mono); font-size: 0.8rem; color: var(--gold);
+      letter-spacing: 4px; text-transform: uppercase;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+    @keyframes pulse { 0%,100% { opacity: 1; text-shadow: 0 0 10px var(--gold); } 50% { opacity: 0.4; } }
 
     @media (max-width: 900px) {
       .split-left  { display: none; }
-      .split-right { width: 100%; min-width: unset; border-left: none; }
-      .split-right::before { display: none; }
-      html, body { overflow: auto; }
-      body { display: block; }
-      .split-right { min-height: 100vh; }
+      .viewport-container { padding: 20px; }
+      body { overflow: auto; align-items: flex-start; }
     }
   </style>
 </head>
 <body>
 
-<!-- PAGE LOADER -->
+<!-- MATRIX DATA STREAM BG -->
+<div class="data-stream"></div>
+
+<!-- PAGE LOADER: INITIALIZING HUD -->
 <div id="page-loader">
-  <div class="loader-logo">نخبة</div>
-  <div class="loader-bar"><div class="loader-bar-fill"></div></div>
+  <div class="loader-ring"></div>
+  <div class="loader-text">Initializing Nukhba HUD...</div>
 </div>
 
-<!-- ═══ LEFT PANEL ═══ -->
-<div class="split-left">
-  <div class="left-bg"></div>
-  <div class="left-content">
-
+<div class="viewport-container">
+  <!-- ═══ LEFT PANEL ═══ -->
+  <div class="split-left">
     <div class="brand-arabic">نخبة</div>
-    <div class="brand-en">Nukhba Elite Selection</div>
+    <div class="brand-en">SYSTEM // ELITE_INTELLIGENCE</div>
     <div class="left-divider"></div>
 
-    <div class="testimonial">
-      <div class="testimonial-quote">&ldquo;</div>
-      <p>Nukhba transformed how we hire. We assembled our entire AI engineering team within days — talent quality we'd never accessed before.</p>
-      <div class="testimonial-author">
-        <div class="author-avatar">S</div>
-        <div>
-          <div class="author-name">Sneha Patel</div>
-          <div class="author-title">Chief Engineering Officer · TechForward</div>
-        </div>
+    <div class="stats-hud">
+      <div class="stat-box">
+        <div class="stat-num">12,045</div>
+        <div class="stat-lbl">Processed Profiles</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num">98.2%</div>
+        <div class="stat-lbl">AI Match Accuracy</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num">72hr</div>
+        <div class="stat-lbl">Average Placement</div>
       </div>
     </div>
+  </div>
 
-    <div class="stats-row">
-      <div class="stat-item">
-        <div class="stat-num">12K+</div>
-        <div class="stat-lbl">Elite Candidates</div>
+  <!-- ═══ RIGHT PANEL (POD) ═══ -->
+  <div class="split-right">
+    
+    <div class="auth-pod">
+      <div class="form-header" id="form-title-area">
+        <div class="form-title">Authenticate</div>
+        <div class="form-desc text-dim">IDENTIFY // ACCESS_GRANTED</div>
       </div>
-      <div class="stat-item">
-        <div class="stat-num">98%</div>
-        <div class="stat-lbl">Match Accuracy</div>
+
+      <!-- Tab Bar -->
+      <div class="tab-bar">
+        <div class="tab active" id="tab-signin"   onclick="switchTab('signin')">Sign In</div>
+        <div class="tab"        id="tab-register" onclick="switchTab('register')">Register</div>
       </div>
-      <div class="stat-item">
-        <div class="stat-num">3 Days</div>
-        <div class="stat-lbl">Avg. Hire Time</div>
+
+      <!-- ── SIGN IN PANEL ── -->
+      <div id="panel-signin" class="panel-enter">
+        <div class="google-btn-container" id="google-signin-btn"></div>
+        <div class="or-divider">SYS_OVERRIDE // EMAIL</div>
+
+        <div class="form-group">
+          <label>Identity (Email)</label>
+          <input type="email" id="login-email" placeholder="agent@nukhba.elite" autocomplete="email" />
+        </div>
+
+        <div class="form-group">
+          <label>Clearance Code (Password)</label>
+          <div class="pwd-wrap">
+            <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password" />
+            <button class="pwd-toggle" onclick="togglePwd('login-password',this)" title="Decrypt">👁</button>
+          </div>
+        </div>
+
+        <div style="display:flex;justify-content:flex-end;margin-bottom:24px">
+          <span style="font-size:.7rem;font-family:var(--font-mono);color:var(--gold);cursor:pointer;text-transform:uppercase"
+                onclick="showToast('Initiating reset protocol... contact system admin','info')">Lost Clearance?</span>
+        </div>
+
+        <button class="btn btn-primary w-full" id="btn-login" onclick="doLogin()">
+          INITIALIZE_SESSION <span style="font-family:var(--font-mono)">_&gt;</span>
+        </button>
       </div>
-    </div>
+
+      <!-- ── REGISTER PANEL ── -->
+      <div id="panel-register" class="hidden panel-enter">
+        <div class="google-btn-container" id="google-register-btn"></div>
+        <div class="or-divider">NEW_NODE // EMAIL</div>
+
+        <div class="form-cols-2">
+          <div class="form-group">
+            <label>Designation (Name)</label>
+            <input type="text" id="reg-name" placeholder="John_Doe" autocomplete="name" />
+          </div>
+          <div class="form-group">
+            <label>Access Level</label>
+            <select id="reg-role">
+              <option value="Candidate">Candidate</option>
+              <option value="HR">HR Command</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Identity (Email)</label>
+          <input type="email" id="reg-email" placeholder="john@domain.com" autocomplete="email" />
+        </div>
+
+        <div class="form-group">
+          <label>Clearance Key (Password)</label>
+          <div class="pwd-wrap">
+            <input type="password" id="reg-password" placeholder="Generate key..."
+                   oninput="updateStrength(this.value)" autocomplete="new-password" />
+            <button class="pwd-toggle" onclick="togglePwd('reg-password',this)">👁</button>
+          </div>
+          <div class="strength-bar">
+            <div class="strength-seg" id="s1"></div><div class="strength-seg" id="s2"></div>
+            <div class="strength-seg" id="s3"></div><div class="strength-seg" id="s4"></div>
+          </div>
+          <div class="strength-text" id="strength-label">AWAITING_INPUT</div>
+        </div>
+
+        <button class="btn btn-primary w-full" id="btn-register" onclick="doRegister()">
+          UPLOAD_PROFILE <span style="font-family:var(--font-mono)">_&gt;</span>
+        </button>
+      </div>
+    </div><!-- end auth-pod -->
 
   </div>
 </div>
-
-<!-- ═══ RIGHT PANEL ═══ -->
-<div class="split-right">
-
-  <div class="form-header">
-    <div class="form-logo">نخبة</div>
-    <div class="form-logo-sub">Elite • Selection</div>
-    <div id="form-title-area">
-      <div class="form-title">Welcome Back</div>
-      <div class="form-desc text-dim">Sign in to your elite account</div>
-    </div>
-  </div>
-
-  <!-- Tab Bar -->
-  <div class="tab-bar">
-    <div class="tab active" id="tab-signin"   onclick="switchTab('signin')">Sign In</div>
-    <div class="tab"        id="tab-register" onclick="switchTab('register')">Create Account</div>
-  </div>
-
-  <!-- ── SIGN IN PANEL ── -->
-  <div id="panel-signin" class="panel-enter">
-
-    <!-- Google Sign-In button (rendered by GSI JS) -->
-    <div class="google-btn-container" id="google-signin-btn"></div>
-    <div class="or-divider">or continue with email</div>
-
-    <div class="form-group">
-      <label>Email Address</label>
-      <div class="input-icon-wrap">
-        <span class="icon">✉</span>
-        <input type="email" id="login-email" placeholder="you@example.com" autocomplete="email" />
-      </div>
-    </div>
-
-    <div class="form-group">
-      <label>Password</label>
-      <div class="pwd-wrap">
-        <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password" />
-        <button class="pwd-toggle" onclick="togglePwd('login-password',this)" title="Show password">👁</button>
-      </div>
-    </div>
-
-    <div style="display:flex;justify-content:flex-end;margin-bottom:18px">
-      <span style="font-size:.82rem;color:var(--text-dim);cursor:pointer"
-            onclick="showToast('Password reset — contact admin','info')">Forgot password?</span>
-    </div>
-
-    <button class="btn btn-primary" id="btn-login" onclick="doLogin()">
-      Sign In &nbsp;→
-    </button>
-
-    <div class="demo-hint">
-      Demo: <code>hr@example.com</code> / <code>password123</code>
-    </div>
-  </div>
-
-  <!-- ── REGISTER PANEL ── -->
-  <div id="panel-register" class="hidden panel-enter">
-
-    <!-- Google Register button -->
-    <div class="google-btn-container" id="google-register-btn"></div>
-    <div class="or-divider">or register with email</div>
-
-    <div class="form-cols-2">
-      <div class="form-group">
-        <label>Full Name</label>
-        <input type="text" id="reg-name" placeholder="Jane Doe" autocomplete="name" />
-      </div>
-      <div class="form-group">
-        <label>Role</label>
-        <select id="reg-role">
-          <option value="Candidate">Candidate</option>
-          <option value="HR">HR Manager</option>
-        </select>
-      </div>
-    </div>
-
-    <div class="form-group">
-      <label>Email Address</label>
-      <div class="input-icon-wrap">
-        <span class="icon">✉</span>
-        <input type="email" id="reg-email" placeholder="jane@example.com" autocomplete="email" />
-      </div>
-    </div>
-
-    <div class="form-group">
-      <label>Password</label>
-      <div class="pwd-wrap">
-        <input type="password" id="reg-password" placeholder="Create a strong password"
-               oninput="updateStrength(this.value)" autocomplete="new-password" />
-        <button class="pwd-toggle" onclick="togglePwd('reg-password',this)" title="Show password">👁</button>
-      </div>
-      <div class="strength-bar">
-        <div class="strength-seg" id="s1"></div>
-        <div class="strength-seg" id="s2"></div>
-        <div class="strength-seg" id="s3"></div>
-        <div class="strength-seg" id="s4"></div>
-      </div>
-      <div class="strength-text" id="strength-label"></div>
-    </div>
-
-    <button class="btn btn-primary" id="btn-register" onclick="doRegister()">
-      ✨ Join the Elite
-    </button>
-  </div>
-
-</div><!-- end split-right -->
 
 <div id="toast-container"></div>
 <script src="/web/js/app.js"></script>
 <script>
-  // ── Page load ──
   window.addEventListener('load', () => {
     setTimeout(() => {
       const loader = document.getElementById('page-loader');
       loader.style.opacity = '0';
-      setTimeout(() => loader.remove(), 500);
-    }, 900);
+      setTimeout(() => loader.remove(), 800);
+      document.title = "Nukhba Elite — HUD Active";
+    }, 1200);
   });
 
-  // ── Redirect if already logged in ──
   const _me = session.get();
   if (_me) redirectByRole(_me);
 
   function redirectByRole(u) {
-    if (u.role === 'HR' || u.role === 'Admin')
-      window.location.href = '/web/pages/hr.html';
-    else
-      window.location.href = '/web/pages/candidate.html';
+    if (u.role === 'HR' || u.role === 'Admin') window.location.href = '/web/pages/hr.html';
+    else window.location.href = '/web/pages/candidate.html';
   }
 
-  // ── Tab switch ──
   function switchTab(tab) {
-    const signin   = document.getElementById('panel-signin');
-    const register = document.getElementById('panel-register');
-    const tS = document.getElementById('tab-signin');
-    const tR = document.getElementById('tab-register');
-    const titleArea = document.getElementById('form-title-area');
+    const s = document.getElementById('panel-signin'), r = document.getElementById('panel-register');
+    const ts = document.getElementById('tab-signin'), tr = document.getElementById('tab-register');
+    const title = document.getElementById('form-title-area');
 
-    signin.classList.toggle('hidden', tab !== 'signin');
-    register.classList.toggle('hidden', tab !== 'register');
-    tS.classList.toggle('active', tab === 'signin');
-    tR.classList.toggle('active', tab === 'register');
+    s.classList.toggle('hidden', tab !== 'signin');
+    r.classList.toggle('hidden', tab !== 'register');
+    ts.classList.toggle('active', tab === 'signin');
+    tr.classList.toggle('active', tab === 'register');
 
     if (tab === 'signin') {
-      titleArea.innerHTML = '<div class="form-title">Welcome Back</div><div class="form-desc text-dim">Sign in to your elite account</div>';
+      title.innerHTML = '<div class="form-title">Authenticate</div><div class="form-desc text-dim">IDENTIFY // ACCESS_GRANTED</div>';
     } else {
-      titleArea.innerHTML = '<div class="form-title">Join the Elite</div><div class="form-desc text-dim">Create your account and start your journey</div>';
-      register.classList.add('panel-enter');
+      title.innerHTML = '<div class="form-title">New Profile</div><div class="form-desc text-dim">REGISTER_NODE // DATABASE</div>';
+      r.classList.add('panel-enter');
     }
   }
 
-  // ── Password visibility toggle ──
   function togglePwd(id, btn) {
     const inp = document.getElementById(id);
     inp.type = inp.type === 'password' ? 'text' : 'password';
     btn.textContent = inp.type === 'password' ? '👁' : '🙈';
+    btn.style.color = inp.type === 'text' ? 'var(--gold)' : 'var(--text-dim)';
   }
 
-  // ── Password strength meter ──
   function updateStrength(val) {
     let score = 0;
     if (val.length >= 8) score++;
@@ -452,64 +385,72 @@
     if (/[0-9]/.test(val)) score++;
     if (/[^A-Za-z0-9]/.test(val)) score++;
 
-    const colors = ['#e53e3e','#dd6b20','#d4a017','#38a169'];
-    const labels = ['Weak','Fair','Good','Strong'];
+    const colors = ['var(--danger)','#ff9900','var(--gold)','var(--success)'];
+    const glows  = [
+      '0 0 8px rgba(255,51,102,0.5)', 
+      '0 0 8px rgba(255,153,0,0.5)', 
+      '0 0 8px rgba(212,175,55,0.5)', 
+      '0 0 8px rgba(0,255,153,0.5)'
+    ];
+    const labels = ['COMPROMISED','SUB-OPTIMAL','ACCEPTABLE','SECURE'];
 
     for (let i = 1; i <= 4; i++) {
-      document.getElementById('s'+i).style.background =
-        i <= score ? colors[score-1] : 'rgba(255,255,255,0.06)';
+       const seg = document.getElementById('s'+i);
+       if (i <= score) {
+         seg.style.background = colors[score-1];
+         seg.style.boxShadow = glows[score-1];
+       } else {
+         seg.style.background = 'var(--border)';
+         seg.style.boxShadow = 'none';
+       }
     }
     const lbl = document.getElementById('strength-label');
-    lbl.textContent = val.length ? (labels[score-1] || '') : '';
+    lbl.textContent = val.length ? `STATUS: ${labels[score-1]||''}` : 'AWAITING_INPUT';
     lbl.style.color = score ? colors[score-1] : 'var(--text-muted)';
   }
 
-  // ── Login ──
   async function doLogin() {
-    const btn   = document.getElementById('btn-login');
+    const btn = document.getElementById('btn-login');
     const email = document.getElementById('login-email').value.trim();
-    const pwd   = document.getElementById('login-password').value;
-    if (!email || !pwd) return showToast('Please fill in all fields', 'error');
+    const pwd = document.getElementById('login-password').value;
+    if (!email || !pwd) return showToast('ERR: Missing parameters', 'error');
 
     setLoading(btn, true);
     try {
       const user = await api('POST', '/users/login', { email, password: pwd });
       session.set(user);
-      showToast(`Welcome back, ${user.name}! 💎`, 'success');
-      setTimeout(() => redirectByRole(user), 900);
+      showToast(`ACCESS GRANTED. Welcome Agent ${user.name}.`, 'success');
+      setTimeout(() => redirectByRole(user), 1000);
     } catch(e) {
-      showToast(e.message || 'Invalid credentials', 'error');
+      showToast('ACCESS DENIED: ' + (e.message || 'Invalid credentials'), 'error');
     } finally { setLoading(btn, false); }
   }
 
-  // ── Register ──
   async function doRegister() {
-    const btn      = document.getElementById('btn-register');
-    const name     = document.getElementById('reg-name').value.trim();
-    const role     = document.getElementById('reg-role').value;
-    const email    = document.getElementById('reg-email').value.trim();
+    const btn = document.getElementById('btn-register');
+    const name = document.getElementById('reg-name').value.trim();
+    const role = document.getElementById('reg-role').value;
+    const email = document.getElementById('reg-email').value.trim();
     const password = document.getElementById('reg-password').value;
 
-    if (!name || !email || !password) return showToast('Please fill all fields', 'error');
-    if (password.length < 6) return showToast('Password must be at least 6 characters', 'error');
+    if (!name||!email||!password) return showToast('ERR: Incomplete transmission', 'error');
+    if (password.length < 6) return showToast('ERR: Key length insufficient', 'error');
 
     setLoading(btn, true);
     try {
       const user = await api('POST', '/users/register', { name, email, password, role });
       session.set(user);
-      showToast('🎉 Elite account created! Welcome to Nukhba.', 'success');
-      setTimeout(() => redirectByRole(user), 1200);
-    } catch(e) {
-      showToast(e.message || 'Registration failed', 'error');
+      showToast('NODE CREATED. Synchronizing...', 'success');
+      setTimeout(() => redirectByRole(user), 1000);
+    } catch(e) { showToast('ERR: '+(e.message||'Registration failed'), 'error');
     } finally { setLoading(btn, false); }
   }
 
-  // ── Enter key ──
   document.addEventListener('keydown', e => {
-    if (e.key !== 'Enter') return;
-    const signinPanel = document.getElementById('panel-signin');
-    if (!signinPanel.classList.contains('hidden')) doLogin();
-    else doRegister();
+    if (e.key === 'Enter') {
+       if (!document.getElementById('panel-signin').classList.contains('hidden')) doLogin();
+       else doRegister();
+    }
   });
 </script>
 </body>
