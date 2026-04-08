@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Nukhba HUD — Command Center</title>
+  <title>Nukhba Elite — HR Dashboard</title>
   <link rel="stylesheet" href="/web/css/style.css" />
   <style>
     /* Section transitions */
@@ -38,7 +38,7 @@
 <nav class="topbar">
   <div class="topbar-brand">
     <span class="topbar-logo">نخبة</span>
-    <span class="topbar-sub">COMMAND_CENTER</span>
+    <span class="topbar-sub">HR DASHBOARD</span>
   </div>
   <div class="topbar-right" id="topbar-user"></div>
 </nav>
@@ -48,19 +48,19 @@
 
   <!-- Floating Dock -->
   <aside class="sidebar-dock">
-    <div class="sidebar-label">Main Core</div>
+    <div class="sidebar-label">Main</div>
     <div class="sidebar-item active" onclick="showSection('overview')">
-      <span class="icon">▤</span> Global Overview
+      <span class="icon">▤</span> Dashboard
     </div>
     <div class="sidebar-item" onclick="showSection('jobs')">
-      <span class="icon">◱</span> Active Postings
+      <span class="icon">◱</span> Job Postings
     </div>
     <div class="sidebar-item" onclick="showSection('applications')">
-      <span class="icon">▣</span> Applicant Data
+      <span class="icon">▣</span> Applicants
     </div>
-    <div class="sidebar-label" style="margin-top:20px">Operations</div>
+    <div class="sidebar-label" style="margin-top:20px">Manage</div>
     <div class="sidebar-item" onclick="showSection('post-job')">
-      <span class="icon">╪</span> Deploy New Listing
+      <span class="icon">╪</span> Post New Job
     </div>
   </aside>
 
@@ -68,8 +68,8 @@
 
     <!-- ──── OVERVIEW ──── -->
     <section id="sec-overview" class="section">
-      <div class="page-title">System Status</div>
-      <div class="page-subtitle">Real-time metrics and intelligence overview. AI modules active.</div>
+      <div class="page-title">Platform Status</div>
+      <div class="page-subtitle">Overview of recruitment metrics and candidate activity.</div>
 
       <div class="metrics-grid" id="metrics-grid">
         <div class="bento-card">
@@ -85,7 +85,7 @@
         <div class="bento-card">
           <div class="bento-icon" style="color:var(--success)">◈</div>
           <div class="bento-value" id="m-avg" style="color:var(--success);text-shadow:0 0 20px var(--success-glow)">--</div>
-          <div class="bento-label">Network Avg AI Fit</div>
+          <div class="bento-label">Average Match Score</div>
         </div>
         <div class="bento-card">
           <div class="bento-icon text-dim">◬</div>
@@ -97,13 +97,13 @@
       <!-- Recent Applications -->
       <div class="card" style="margin-top:20px; padding:0; background:rgba(15,15,20,0.4)">
         <div style="padding:24px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
-          <h3 style="font-family:var(--font-mono);font-size:0.9rem;text-transform:uppercase;color:var(--gold);letter-spacing:1px">Latest Processed Profiles</h3>
-          <button class="btn btn-ghost" style="padding:6px 12px;font-size:0.75rem" onclick="showSection('applications')">EXPAND_ALL</button>
+          <h3 style="font-family:var(--font-mono);font-size:0.9rem;text-transform:uppercase;color:var(--gold);letter-spacing:1px">Recent Applications</h3>
+          <button class="btn btn-ghost" style="padding:6px 12px;font-size:0.75rem" onclick="showSection('applications')">VIEW_ALL</button>
         </div>
         <div class="table-wrap" style="border:none; border-radius:0 0 var(--radius-lg) var(--radius-lg);">
           <table class="data-table" id="tbl-recent">
             <thead><tr>
-              <th>Entity ID</th><th>Target Role</th><th>AI Fit Protocol</th><th>Node Status</th><th>Action</th>
+              <th>Candidate ID</th><th>Job Title</th><th>AI Score</th><th>Status</th><th>Action</th>
             </tr></thead>
             <tbody id="tbody-recent"><tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:40px">INITIALIZING DATA STREAMS...</td></tr></tbody>
           </table>
@@ -113,7 +113,7 @@
 
     <!-- ──── JOB POSTINGS ──── -->
     <section id="sec-jobs" class="section hidden">
-      <div class="page-title">Active Deployments</div>
+      <div class="page-title">Active Job Postings</div>
       <div class="page-subtitle">Track and manage open role requisitions.</div>
 
       <div id="jobs-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:24px;margin-top:16px">
@@ -123,14 +123,14 @@
 
     <!-- ──── ALL APPLICATIONS ──── -->
     <section id="sec-applications" class="section hidden">
-      <div class="page-title">Global Applicant Registry</div>
-      <div class="page-subtitle">Cross-referenced database of all candidates against open roles.</div>
+      <div class="page-title">All Applicants</div>
+      <div class="page-subtitle">Comprehensive database of candidates across all roles.</div>
 
       <div class="card" style="padding:0; margin-top:16px; background:rgba(0,0,0,0.3)">
         <div class="table-wrap" style="border:none; border-radius:var(--radius-lg)">
           <table class="data-table">
             <thead><tr>
-              <th>Subject</th><th>Requisition</th><th>AI Score</th><th>Diagnostic Snippet</th><th>State</th><th>Override</th>
+              <th>Candidate</th><th>Job Title</th><th>AI Score</th><th>AI Feedback</th><th>Status</th><th>Update</th>
             </tr></thead>
             <tbody id="tbody-all"><tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:40px">SCANNING NETWORK...</td></tr></tbody>
           </table>
@@ -140,24 +140,24 @@
 
     <!-- ──── POST JOB ──── -->
     <section id="sec-post-job" class="section hidden">
-      <div class="page-title">Deploy Requisition</div>
-      <div class="page-subtitle">Initialize a new role parameter block for AI candidate matching.</div>
+      <div class="page-title">Post New Job</div>
+      <div class="page-subtitle">Fill in the details to post a new job opening for AI matching.</div>
 
       <div class="card" style="max-width:640px;margin-top:16px">
         <div class="form-group">
-          <label>Role Designation (Title)</label>
-          <input type="text" id="job-title" placeholder="e.g. Lead Neural Architect" />
+          <label>Job Title</label>
+          <input type="text" id="job-title" placeholder="e.g. Senior Software Engineer" />
         </div>
         <div class="form-group">
-          <label>Objectives (Description)</label>
-          <textarea id="job-desc" placeholder="Define mission parameters..."></textarea>
+          <label>Job Description</label>
+          <textarea id="job-desc" placeholder="Describe the role and responsibilities..."></textarea>
         </div>
         <div class="form-group">
           <label>Vector Requirements <span style="font-family:var(--font-body);text-transform:none;opacity:0.5">(comma separated constraints)</span></label>
           <textarea id="job-reqs" placeholder="Python, TensorFlow, Level 4 Clearance..." style="min-height:80px"></textarea>
         </div>
         <div style="margin-top:30px">
-           <button class="btn btn-primary" style="width:100%" id="btn-post-job" onclick="postJob()">INITIALIZE REQUISITION <span style="font-family:var(--font-mono)">_&gt;</span></button>
+           <button class="btn btn-primary" style="width:100%" id="btn-post-job" onclick="postJob()">POST JOB <span style="font-family:var(--font-mono)">_&gt;</span></button>
         </div>
       </div>
     </section>
@@ -169,7 +169,7 @@
 <div class="modal-overlay hidden" id="app-modal">
   <div class="modal">
     <button class="modal-close" onclick="closeModal()">✕</button>
-    <div class="modal-title" id="modal-title">Subject Diagnostics</div>
+    <div class="modal-title" id="modal-title">Candidate Evaluation</div>
     <div id="modal-body"></div>
   </div>
 </div>
@@ -223,11 +223,11 @@
     if (!slice.length) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:40px">NO_DATA_FOUND</td></tr>'; return; }
     tbody.innerHTML = slice.map(a => `
       <tr>
-        <td class="font-mono">SUBJ_${a.candidate_id.toString().padStart(3,'0')}</td>
+        <td class="font-mono">CANDIDATE_${a.candidate_id.toString().padStart(3,'0')}</td>
         <td>${a._job?.title||'DELETED_ROLE'}</td>
         <td class="font-mono"><span class="badge ${scoreColor(a.ai_score)}">${a.ai_score?.toFixed(1)||'--'}%</span></td>
         <td><span class="badge badge-dim">${a.status}</span></td>
-        <td><button class="btn btn-ghost" style="padding:6px 12px;font-size:0.7rem;font-family:var(--font-mono)" onclick="viewApp(${a.id})">DECRYPT</button></td>
+        <td><button class="btn btn-ghost" style="padding:6px 12px;font-size:0.7rem;font-family:var(--font-mono)" onclick="viewApp(${a.id})">VIEW</button></td>
       </tr>`).join('');
   }
 
@@ -243,10 +243,10 @@
         <div class="font-mono" style="font-size:0.65rem;color:var(--text-dim);margin-bottom:16px">REQ_ID: ${j.id.toString().padStart(4,'0')}</div>
         <p style="font-size:0.85rem;color:var(--text-dim);margin:0 0 20px;line-height:1.6;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden">${j.description}</p>
         <div style="padding:12px;background:rgba(212,175,55,0.05);border-radius:var(--radius-sm);border:1px solid rgba(212,175,55,0.1);margin-bottom:20px">
-          <div class="font-mono" style="font-size:0.6rem;color:var(--gold);margin-bottom:4px">REQUIREMENTS_VECTOR</div>
+          <div class="font-mono" style="font-size:0.6rem;color:var(--gold);margin-bottom:4px">JOB_REQUIREMENTS</div>
           <div style="font-size:0.78rem;color:var(--text)">${j.requirements}</div>
         </div>
-        <button class="btn btn-ghost w-full" style="font-family:var(--font-mono);font-size:0.75rem" onclick="showSection('applications')">TRACE_SUBJECTS</button>
+        <button class="btn btn-ghost w-full" style="font-family:var(--font-mono);font-size:0.75rem" onclick="showSection('applications')">VIEW_CANDIDATES</button>
       </div>`).join('');
   }
 
@@ -255,7 +255,7 @@
     if (!allApplications.length) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:40px">NO_DATA_FOUND</td></tr>'; return; }
     tbody.innerHTML = allApplications.map((a,i) => `
       <tr>
-        <td class="font-mono text-gold">SUBJ_${a.candidate_id.toString().padStart(3,'0')}</td>
+        <td class="font-mono text-gold">CANDIDATE_${a.candidate_id.toString().padStart(3,'0')}</td>
         <td style="color:#fff">${a._job?.title||'DELETED_ROLE'}</td>
         <td>
           <input type="number" id="score-${a.id}" class="status-select font-mono" style="width:70px;background:rgba(0,0,0,0.6);border-color:rgba(212,175,55,0.3);color:var(--gold)" value="${a.ai_score != null ? Math.round(a.ai_score) : 0}" step="1" min="0" max="100" />
@@ -277,7 +277,7 @@
 
   function viewApp(appId) {
     const a = allApplications.find(x => x.id === appId);
-    document.getElementById('modal-title').innerHTML = `Diagnostics <span class="text-dim">/ SUBJ_${a.candidate_id.toString().padStart(3,'0')}</span>`;
+    document.getElementById('modal-title').innerHTML = `Evaluation <span class="text-dim">/ CANDIDATE_${a.candidate_id.toString().padStart(3,'0')}</span>`;
     
     // Dynamic ring fill logic
     const sc = a.ai_score || 0;
@@ -289,7 +289,7 @@
         <div class="ai-score-ring" style="background:${grad}; box-shadow: 0 0 20px ${clr}33">
           <div class="score-num" style="color:${clr}; text-shadow: 0 0 15px ${clr}">${sc.toFixed(0)}</div>
         </div>
-        <div class="score-lbl" style="color:${clr}">MATCH_COEFFICIENT</div>
+        <div class="score-lbl" style="color:${clr}">MATCH_SCORE</div>
       </div>
       
       <div style="display:flex;justify-content:center;gap:12px;margin-bottom:30px">
@@ -298,12 +298,12 @@
       </div>
 
       <div class="card" style="background:rgba(0,0,0,0.4);border-color:var(--border);margin-bottom:16px;padding:20px">
-        <div class="font-mono text-gold" style="font-size:0.65rem;margin-bottom:10px">SYSTEM.EVAL() OUTPUT:</div>
+        <div class="font-mono text-gold" style="font-size:0.65rem;margin-bottom:10px">AI_ANALYSIS_FEEDBACK:</div>
         <p style="font-size:0.85rem;line-height:1.6;color:var(--text)">${a.ai_feedback||'Awaiting telemetry...'}</p>
       </div>
       
       <div class="card" style="background:rgba(0,0,0,0.4);border-color:var(--border);padding:20px">
-        <div class="font-mono text-dim" style="font-size:0.65rem;margin-bottom:10px">RAW_MNEMONIC_DUMP:</div>
+        <div class="font-mono text-dim" style="font-size:0.65rem;margin-bottom:10px">RESUME_CONTENT:</div>
         <p class="font-mono" style="font-size:0.75rem;line-height:1.6;color:var(--text-muted);max-height:180px;overflow-y:auto;white-space:pre-wrap">${a.resume_text||'NO_DATA'}</p>
       </div>
     `;
@@ -335,7 +335,7 @@
     setLoading(btn, true);
     try {
       await api('POST', `/jobs?hr_id=${user.id}`, { title, description:desc, requirements:reqs });
-      showToast('REQUISITION DEPLOYED TO NETWORK','success');
+      showToast('JOB POSTED TO NETWORK','success');
       document.getElementById('job-title').value='';
       document.getElementById('job-desc').value='';
       document.getElementById('job-reqs').value='';
